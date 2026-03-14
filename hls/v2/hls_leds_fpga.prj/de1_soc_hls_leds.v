@@ -11,19 +11,12 @@ module de1_soc_hls_leds (
     output wire       UART_TXD
 );
 
-localparam integer DEBOUNCE_CLKS = 20'd500_000;
 localparam integer MSG_LEN = 18;
 
 reg [3:0]  reset_pipe = 4'b0000;
-reg [1:0]  key_meta = 2'b11;
-reg [1:0]  key_sync = 2'b11;
-reg [1:0]  key_stable = 2'b11;
-reg [19:0] debounce_count [0:1];
 
 reg        start_reg = 1'b0;
 reg        waiting_for_done = 1'b0;
-reg        button_reg = 1'b1;
-reg        reset_button_reg = 1'b1;
 
 reg [31:0] count_reg = 32'd0;
 reg [31:0] last_sent_count = 32'd0;
@@ -40,7 +33,6 @@ wire       busy;
 wire       done;
 wire [31:0] returndata;
 wire       uart_ready;
-integer    key_idx;
 
 assign resetn = reset_pipe[3];
 assign LEDR = count_reg[9:0];
@@ -75,30 +67,6 @@ function [7:0] hex_ascii;
     end
 endfunction
 
-function [6:0] hex7seg;
-    input [3:0] nibble;
-    begin
-        case (nibble)
-            4'h0: hex7seg = 7'b1000000;
-            4'h1: hex7seg = 7'b1111001;
-            4'h2: hex7seg = 7'b0100100;
-            4'h3: hex7seg = 7'b0110000;
-            4'h4: hex7seg = 7'b0011001;
-            4'h5: hex7seg = 7'b0010010;
-            4'h6: hex7seg = 7'b0000010;
-            4'h7: hex7seg = 7'b1111000;
-            4'h8: hex7seg = 7'b0000000;
-            4'h9: hex7seg = 7'b0010000;
-            4'hA: hex7seg = 7'b0001000;
-            4'hB: hex7seg = 7'b0000011;
-            4'hC: hex7seg = 7'b1000110;
-            4'hD: hex7seg = 7'b0100001;
-            4'hE: hex7seg = 7'b0000110;
-            default: hex7seg = 7'b0001110;
-        endcase
-    end
-endfunction
-
 task load_message;
     input [31:0] value;
     begin
@@ -123,19 +91,36 @@ task load_message;
     end
 endtask
 
+function [6:0] hex7seg;
+    input [3:0] nibble;
+    begin
+        case (nibble)
+            4'h0: hex7seg = 7'b1000000;
+            4'h1: hex7seg = 7'b1111001;
+            4'h2: hex7seg = 7'b0100100;
+            4'h3: hex7seg = 7'b0110000;
+            4'h4: hex7seg = 7'b0011001;
+            4'h5: hex7seg = 7'b0010010;
+            4'h6: hex7seg = 7'b0000010;
+            4'h7: hex7seg = 7'b1111000;
+            4'h8: hex7seg = 7'b0000000;
+            4'h9: hex7seg = 7'b0010000;
+            4'hA: hex7seg = 7'b0001000;
+            4'hB: hex7seg = 7'b0000011;
+            4'hC: hex7seg = 7'b1000110;
+            4'hD: hex7seg = 7'b0100001;
+            4'hE: hex7seg = 7'b0000110;
+            default: hex7seg = 7'b0001110;
+        endcase
+    end
+endfunction
+
 always @(posedge CLOCK_50) begin
     reset_pipe <= {reset_pipe[2:0], 1'b1};
-    key_meta <= KEY;
-    key_sync <= key_meta;
 
     if (!resetn) begin
-        key_stable <= 2'b11;
-        debounce_count[0] <= 20'd0;
-        debounce_count[1] <= 20'd0;
         start_reg <= 1'b0;
         waiting_for_done <= 1'b0;
-        button_reg <= 1'b1;
-        reset_button_reg <= 1'b1;
         count_reg <= 32'd0;
         last_sent_count <= 32'd0;
         pending_count <= 32'd0;
@@ -147,20 +132,7 @@ always @(posedge CLOCK_50) begin
         start_reg <= 1'b0;
         uart_valid <= 1'b0;
 
-        for (key_idx = 0; key_idx < 2; key_idx = key_idx + 1) begin
-            if (key_sync[key_idx] == key_stable[key_idx]) begin
-                debounce_count[key_idx] <= 20'd0;
-            end else if (debounce_count[key_idx] == DEBOUNCE_CLKS - 1) begin
-                key_stable[key_idx] <= key_sync[key_idx];
-                debounce_count[key_idx] <= 20'd0;
-            end else begin
-                debounce_count[key_idx] <= debounce_count[key_idx] + 20'd1;
-            end
-        end
-
         if (!waiting_for_done && !busy) begin
-            button_reg <= key_stable[0];
-            reset_button_reg <= key_stable[1];
             start_reg <= 1'b1;
             waiting_for_done <= 1'b1;
         end
@@ -203,8 +175,8 @@ switch_to_led switch_to_led_inst (
     .done(done),
     .stall(1'b0),
     .returndata(returndata),
-    .button_n(button_reg),
-    .reset_button_n(reset_button_reg)
+    .key0_n(KEY[0]),
+    .key1_n(KEY[1])
 );
 
 uart_tx #(
