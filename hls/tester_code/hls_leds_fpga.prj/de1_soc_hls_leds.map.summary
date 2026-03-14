@@ -1,0 +1,17 @@
+Analysis & Synthesis Status : Successful - Sat Mar 14 14:38:00 2026
+Quartus Prime Version : 18.1.0 Build 625 09/12/2018 SJ Lite Edition
+Revision Name : de1_soc_hls_leds
+Top-level Entity Name : de1_soc_hls_leds
+Family : Cyclone V
+Logic utilization (in ALMs) : N/A
+Total registers : 670
+Total pins : 56
+Total virtual pins : 0
+Total block memory bits : 256
+Total DSP Blocks : 0
+Total HSSI RX PCSs : 0
+Total HSSI PMA RX Deserializers : 0
+Total HSSI TX PCSs : 0
+Total HSSI PMA TX Serializers : 0
+Total PLLs : 0
+Total DLLs : 0

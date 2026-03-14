@@ -1,0 +1,20 @@
+Fitter Status : Successful - Sat Mar 14 14:40:22 2026
+Quartus Prime Version : 18.1.0 Build 625 09/12/2018 SJ Lite Edition
+Revision Name : de1_soc_hls_leds
+Top-level Entity Name : de1_soc_hls_leds
+Family : Cyclone V
+Device : 5CSEMA5F31C6
+Timing Models : Final
+Logic utilization (in ALMs) : 582 / 32,070 ( 2 % )
+Total registers : 711
+Total pins : 56 / 457 ( 12 % )
+Total virtual pins : 0
+Total block memory bits : 256 / 4,065,280 ( < 1 % )
+Total RAM Blocks : 1 / 397 ( < 1 % )
+Total DSP Blocks : 0 / 87 ( 0 % )
+Total HSSI RX PCSs : 0
+Total HSSI PMA RX Deserializers : 0
+Total HSSI TX PCSs : 0
+Total HSSI PMA TX Serializers : 0
+Total PLLs : 0 / 6 ( 0 % )
+Total DLLs : 0 / 4 ( 0 % )

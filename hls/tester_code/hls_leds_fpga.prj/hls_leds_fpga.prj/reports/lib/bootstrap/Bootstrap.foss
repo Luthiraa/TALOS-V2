@@ -1,0 +1,12 @@
+[foss]
+name = Bootstrap
+version = 3.2.0
+description = Bootstrap - Javascript library for front-end web development
+case = 226436
+source = true
+binary = false
+modified = false
+usage = redistributed
+license_type = MIT
+license_url = https://github.com/twbs/bootstrap/blob/master/LICENSE
+download_url = http://getbootstrap.com/getting-started/#download

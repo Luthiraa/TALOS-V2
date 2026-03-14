@@ -1,0 +1,91 @@
+--lpm_counter DEVICE_FAMILY="Cyclone V" lpm_direction="UP" lpm_port_updown="PORT_UNUSED" lpm_width=3 aclr clock cnt_en q sclr
+--VERSION_BEGIN 18.1 cbx_cycloneii 2018:09:12:13:04:24:SJ cbx_lpm_add_sub 2018:09:12:13:04:24:SJ cbx_lpm_compare 2018:09:12:13:04:24:SJ cbx_lpm_counter 2018:09:12:13:04:24:SJ cbx_lpm_decode 2018:09:12:13:04:24:SJ cbx_mgl 2018:09:12:13:10:36:SJ cbx_nadder 2018:09:12:13:04:24:SJ cbx_stratix 2018:09:12:13:04:24:SJ cbx_stratixii 2018:09:12:13:04:24:SJ  VERSION_END
+
+
+-- Copyright (C) 2018  Intel Corporation. All rights reserved.
+--  Your use of Intel Corporation's design tools, logic functions 
+--  and other software and tools, and its AMPP partner logic 
+--  functions, and any output files from any of the foregoing 
+--  (including device programming or simulation files), and any 
+--  associated documentation or information are expressly subject 
+--  to the terms and conditions of the Intel Program License 
+--  Subscription Agreement, the Intel Quartus Prime License Agreement,
+--  the Intel FPGA IP License Agreement, or other applicable license
+--  agreement, including, without limitation, that your use is for
+--  the sole purpose of programming logic devices manufactured by
+--  Intel and sold by Intel or its authorized distributors.  Please
+--  refer to the applicable agreement for further details.
+
+
+FUNCTION cyclonev_lcell_comb (cin, dataa, datab, datac, datad, datae, dataf, datag, sharein)
+WITH ( DONT_TOUCH, EXTENDED_LUT, LUT_MASK, SHARED_ARITH)
+RETURNS ( combout, cout, shareout, sumout);
+
+--synthesis_resources = lut 3 reg 3 
+SUBDESIGN cntr_ggb
+( 
+	aclr	:	input;
+	clock	:	input;
+	cnt_en	:	input;
+	q[2..0]	:	output;
+	sclr	:	input;
+) 
+VARIABLE 
+	counter_reg_bit[2..0] : dffeas;
+	counter_comb_bita0 : cyclonev_lcell_comb
+		WITH (
+			EXTENDED_LUT = "off",
+			LUT_MASK = "000000000000FF00",
+			SHARED_ARITH = "off"
+		);
+	counter_comb_bita1 : cyclonev_lcell_comb
+		WITH (
+			EXTENDED_LUT = "off",
+			LUT_MASK = "0000FF000000FF00",
+			SHARED_ARITH = "off"
+		);
+	counter_comb_bita2 : cyclonev_lcell_comb
+		WITH (
+			EXTENDED_LUT = "off",
+			LUT_MASK = "0000FF000000FF00",
+			SHARED_ARITH = "off"
+		);
+	aclr_actual	: WIRE;
+	clk_en	: NODE;
+	data[2..0]	: NODE;
+	external_cin	: WIRE;
+	lsb_cin	: WIRE;
+	s_val[2..0]	: WIRE;
+	safe_q[2..0]	: WIRE;
+	sload	: NODE;
+	sset	: NODE;
+	updown_dir	: WIRE;
+	updown_lsb	: WIRE;
+	updown_other_bits	: WIRE;
+
+BEGIN 
+	counter_reg_bit[].asdata = ((sset & s_val[]) # ((! sset) & data[]));
+	counter_reg_bit[].clk = clock;
+	counter_reg_bit[].clrn = (! aclr_actual);
+	counter_reg_bit[].d = ( counter_comb_bita[2..0].sumout);
+	counter_reg_bit[].ena = (clk_en & (((cnt_en # sclr) # sset) # sload));
+	counter_reg_bit[].sclr = sclr;
+	counter_reg_bit[].sload = (sset # sload);
+	counter_comb_bita[2..0].cin = ( counter_comb_bita[1..0].cout, lsb_cin);
+	counter_comb_bita[2..0].datad = ( counter_reg_bit[2..0].q);
+	counter_comb_bita[2..0].dataf = ( updown_other_bits, updown_other_bits, updown_lsb);
+	aclr_actual = aclr;
+	clk_en = VCC;
+	data[] = GND;
+	external_cin = B"1";
+	lsb_cin = B"0";
+	q[] = safe_q[];
+	s_val[] = B"111";
+	safe_q[] = counter_reg_bit[].q;
+	sload = GND;
+	sset = GND;
+	updown_dir = B"1";
+	updown_lsb = updown_dir;
+	updown_other_bits = ((! external_cin) # updown_dir);
+END;
+--VALID FILE

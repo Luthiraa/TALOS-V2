@@ -1,0 +1,96 @@
+set_global_assignment -entity "switch_to_led" -library "switch_to_led" -name IP_TOOL_NAME "Qsys"
+set_global_assignment -entity "switch_to_led" -library "switch_to_led" -name IP_TOOL_VERSION "18.1"
+set_global_assignment -entity "switch_to_led" -library "switch_to_led" -name IP_TOOL_ENV "Qsys"
+set_global_assignment -library "switch_to_led" -name SOPCINFO_FILE [file join $::quartus(qip_path) "../../switch_to_led.sopcinfo"]
+set_global_assignment -entity "switch_to_led" -library "switch_to_led" -name SLD_INFO "QSYS_NAME switch_to_led HAS_SOPCINFO 1 GENERATION_ID 1773512083"
+set_global_assignment -library "switch_to_led" -name MISC_FILE [file join $::quartus(qip_path) "../switch_to_led.cmp"]
+set_global_assignment -library "switch_to_led" -name SLD_FILE [file join $::quartus(qip_path) "switch_to_led.debuginfo"]
+set_global_assignment -entity "switch_to_led" -library "switch_to_led" -name IP_TARGETED_DEVICE_FAMILY "Cyclone V"
+set_global_assignment -entity "switch_to_led" -library "switch_to_led" -name IP_GENERATED_DEVICE_FAMILY "{Cyclone V}"
+set_global_assignment -entity "switch_to_led" -library "switch_to_led" -name IP_QSYS_MODE "STANDALONE"
+set_global_assignment -name SYNTHESIS_ONLY_QIP ON
+set_global_assignment -library "switch_to_led" -name MISC_FILE [file join $::quartus(qip_path) "../../switch_to_led.qsys"]
+set_global_assignment -entity "switch_to_led" -library "switch_to_led" -name IP_COMPONENT_NAME "c3dpdGNoX3RvX2xlZA=="
+set_global_assignment -entity "switch_to_led" -library "switch_to_led" -name IP_COMPONENT_DISPLAY_NAME "c3dpdGNoX3RvX2xlZA=="
+set_global_assignment -entity "switch_to_led" -library "switch_to_led" -name IP_COMPONENT_REPORT_HIERARCHY "On"
+set_global_assignment -entity "switch_to_led" -library "switch_to_led" -name IP_COMPONENT_INTERNAL "Off"
+set_global_assignment -entity "switch_to_led" -library "switch_to_led" -name IP_COMPONENT_VERSION "MS4w"
+set_global_assignment -entity "switch_to_led" -library "switch_to_led" -name IP_COMPONENT_PARAMETER "QVVUT19HRU5FUkFUSU9OX0lE::MTc3MzUxMjA4Mw==::QXV0byBHRU5FUkFUSU9OX0lE"
+set_global_assignment -entity "switch_to_led" -library "switch_to_led" -name IP_COMPONENT_PARAMETER "QVVUT19ERVZJQ0VfRkFNSUxZ::Q3ljbG9uZSBW::QXV0byBERVZJQ0VfRkFNSUxZ"
+set_global_assignment -entity "switch_to_led" -library "switch_to_led" -name IP_COMPONENT_PARAMETER "QVVUT19ERVZJQ0U=::NUNFRkE5RjIzSTc=::QXV0byBERVZJQ0U="
+set_global_assignment -entity "switch_to_led" -library "switch_to_led" -name IP_COMPONENT_PARAMETER "QVVUT19ERVZJQ0VfU1BFRURHUkFERQ==::Nw==::QXV0byBERVZJQ0VfU1BFRURHUkFERQ=="
+set_global_assignment -entity "switch_to_led" -library "switch_to_led" -name IP_COMPONENT_PARAMETER "QVVUT19DTE9DS19DTE9DS19SQVRF::LTE=::QXV0byBDTE9DS19SQVRF"
+set_global_assignment -entity "switch_to_led" -library "switch_to_led" -name IP_COMPONENT_PARAMETER "QVVUT19DTE9DS19DTE9DS19ET01BSU4=::LTE=::QXV0byBDTE9DS19ET01BSU4="
+set_global_assignment -entity "switch_to_led" -library "switch_to_led" -name IP_COMPONENT_PARAMETER "QVVUT19DTE9DS19SRVNFVF9ET01BSU4=::LTE=::QXV0byBSRVNFVF9ET01BSU4="
+set_instance_assignment -entity "switch_to_led_internal" -library "switch_to_led" -name AUTO_SHIFT_REGISTER_RECOGNITION OFF -to *_NO_SHIFT_REG*
+set_global_assignment -entity "switch_to_led_internal" -library "switch_to_led" -name IP_COMPONENT_NAME "c3dpdGNoX3RvX2xlZF9pbnRlcm5hbA=="
+set_global_assignment -entity "switch_to_led_internal" -library "switch_to_led" -name IP_COMPONENT_DISPLAY_NAME "c3dpdGNoX3RvX2xlZF9pbnRlcm5hbA=="
+set_global_assignment -entity "switch_to_led_internal" -library "switch_to_led" -name IP_COMPONENT_REPORT_HIERARCHY "Off"
+set_global_assignment -entity "switch_to_led_internal" -library "switch_to_led" -name IP_COMPONENT_INTERNAL "On"
+set_global_assignment -entity "switch_to_led_internal" -library "switch_to_led" -name IP_COMPONENT_VERSION "MS4w"
+
+set_global_assignment -library "switch_to_led" -name VERILOG_FILE [file join $::quartus(qip_path) "switch_to_led.v"]
+set_global_assignment -library "switch_to_led" -name VHDL_FILE [file join $::quartus(qip_path) "submodules/dspba_library_package.vhd"]
+set_global_assignment -library "switch_to_led" -name VHDL_FILE [file join $::quartus(qip_path) "submodules/dspba_library.vhd"]
+set_global_assignment -library "switch_to_led" -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) "submodules/acl_data_fifo.v"]
+set_global_assignment -library "switch_to_led" -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) "submodules/acl_fifo.v"]
+set_global_assignment -library "switch_to_led" -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) "submodules/acl_ll_fifo.v"]
+set_global_assignment -library "switch_to_led" -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) "submodules/acl_ll_ram_fifo.v"]
+set_global_assignment -library "switch_to_led" -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) "submodules/acl_valid_fifo_counter.v"]
+set_global_assignment -library "switch_to_led" -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) "submodules/acl_dspba_valid_fifo_counter.v"]
+set_global_assignment -library "switch_to_led" -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) "submodules/acl_staging_reg.v"]
+set_global_assignment -library "switch_to_led" -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) "submodules/hld_fifo.sv"]
+set_global_assignment -library "switch_to_led" -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) "submodules/hld_fifo_zero_width.sv"]
+set_global_assignment -library "switch_to_led" -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) "submodules/acl_high_speed_fifo.sv"]
+set_global_assignment -library "switch_to_led" -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) "submodules/acl_low_latency_fifo.sv"]
+set_global_assignment -library "switch_to_led" -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) "submodules/acl_zero_latency_fifo.sv"]
+set_global_assignment -library "switch_to_led" -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) "submodules/acl_fanout_pipeline.sv"]
+set_global_assignment -library "switch_to_led" -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) "submodules/acl_std_synchronizer_nocut.v"]
+set_global_assignment -library "switch_to_led" -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) "submodules/acl_tessellated_incr_decr_threshold.sv"]
+set_global_assignment -library "switch_to_led" -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) "submodules/acl_tessellated_incr_lookahead.sv"]
+set_global_assignment -library "switch_to_led" -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) "submodules/acl_reset_handler.sv"]
+set_global_assignment -library "switch_to_led" -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) "submodules/acl_lfsr.sv"]
+set_global_assignment -library "switch_to_led" -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) "submodules/acl_pop.v"]
+set_global_assignment -library "switch_to_led" -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) "submodules/acl_push.v"]
+set_global_assignment -library "switch_to_led" -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) "submodules/acl_token_fifo_counter.v"]
+set_global_assignment -library "switch_to_led" -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) "submodules/acl_pipeline.v"]
+set_global_assignment -library "switch_to_led" -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) "submodules/acl_dspba_buffer.v"]
+set_global_assignment -library "switch_to_led" -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) "submodules/acl_enable_sink.v"]
+set_global_assignment -library "switch_to_led" -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) "submodules/st_top.v"]
+set_global_assignment -library "switch_to_led" -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) "submodules/acl_full_detector.v"]
+set_global_assignment -library "switch_to_led" -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) "submodules/acl_reset_wire.v"]
+set_global_assignment -library "switch_to_led" -name VHDL_FILE [file join $::quartus(qip_path) "submodules/switch_to_led_function_wrapper.vhd"]
+set_global_assignment -library "switch_to_led" -name VHDL_FILE [file join $::quartus(qip_path) "submodules/switch_to_led_function.vhd"]
+set_global_assignment -library "switch_to_led" -name VHDL_FILE [file join $::quartus(qip_path) "submodules/bb_switch_to_led_B0_runOnce.vhd"]
+set_global_assignment -library "switch_to_led" -name VHDL_FILE [file join $::quartus(qip_path) "submodules/bb_switch_to_led_B0_runOnce_stall_region.vhd"]
+set_global_assignment -library "switch_to_led" -name VHDL_FILE [file join $::quartus(qip_path) "submodules/i_acl_pop_i1_wt_limpop_switch_to_led0.vhd"]
+set_global_assignment -library "switch_to_led" -name VHDL_FILE [file join $::quartus(qip_path) "submodules/i_acl_pop_i1_wt_limpop_switch_to_led_reg.vhd"]
+set_global_assignment -library "switch_to_led" -name VHDL_FILE [file join $::quartus(qip_path) "submodules/i_acl_push_i1_wt_limpush_switch_to_led2.vhd"]
+set_global_assignment -library "switch_to_led" -name VHDL_FILE [file join $::quartus(qip_path) "submodules/i_acl_push_i1_wt_limpush_switch_to_led_reg.vhd"]
+set_global_assignment -library "switch_to_led" -name VHDL_FILE [file join $::quartus(qip_path) "submodules/switch_to_led_B0_runOnce_merge_reg.vhd"]
+set_global_assignment -library "switch_to_led" -name VHDL_FILE [file join $::quartus(qip_path) "submodules/switch_to_led_B0_runOnce_branch.vhd"]
+set_global_assignment -library "switch_to_led" -name VHDL_FILE [file join $::quartus(qip_path) "submodules/switch_to_led_B0_runOnce_merge.vhd"]
+set_global_assignment -library "switch_to_led" -name VHDL_FILE [file join $::quartus(qip_path) "submodules/bb_switch_to_led_B1_start.vhd"]
+set_global_assignment -library "switch_to_led" -name VHDL_FILE [file join $::quartus(qip_path) "submodules/bb_switch_to_led_B1_start_stall_region.vhd"]
+set_global_assignment -library "switch_to_led" -name VHDL_FILE [file join $::quartus(qip_path) "submodules/i_iord_bl_do_unnamed_switch_to_led1_switch_to_led12.vhd"]
+set_global_assignment -library "switch_to_led" -name VHDL_FILE [file join $::quartus(qip_path) "submodules/i_sfc_c0_wt_entry_switch_to_led_c0_enter_switch_to_led.vhd"]
+set_global_assignment -library "switch_to_led" -name VHDL_FILE [file join $::quartus(qip_path) "submodules/i_acl_sfc_exit_c0_wt_entry_switch_to_ledA0Z_switch_to_led10.vhd"]
+set_global_assignment -library "switch_to_led" -name VHDL_FILE [file join $::quartus(qip_path) "submodules/i_sfc_logic_c0_wt_entry_switch_to_led_c0A0Zr_switch_to_led4.vhd"]
+set_global_assignment -library "switch_to_led" -name VHDL_FILE [file join $::quartus(qip_path) "submodules/i_acl_pipeline_keep_going_switch_to_led6.vhd"]
+set_global_assignment -library "switch_to_led" -name VHDL_FILE [file join $::quartus(qip_path) "submodules/i_acl_push_i1_notexitcond_switch_to_led8.vhd"]
+set_global_assignment -library "switch_to_led" -name VHDL_FILE [file join $::quartus(qip_path) "submodules/i_sfc_c1_wt_entry_switch_to_led_c1_enter_switch_to_led.vhd"]
+set_global_assignment -library "switch_to_led" -name VHDL_FILE [file join $::quartus(qip_path) "submodules/i_acl_sfc_exit_c1_wt_entry_switch_to_ledA0Z_switch_to_led25.vhd"]
+set_global_assignment -library "switch_to_led" -name VHDL_FILE [file join $::quartus(qip_path) "submodules/i_acl_sfc_exit_c1_wt_entry_switch_to_ledA0Z_led27_data_fifo.vhd"]
+set_global_assignment -library "switch_to_led" -name VHDL_FILE [file join $::quartus(qip_path) "submodules/i_acl_sfc_exit_c1_wt_entry_switch_to_ledA0Zed_full_detector.vhd"]
+set_global_assignment -library "switch_to_led" -name VHDL_FILE [file join $::quartus(qip_path) "submodules/i_sfc_logic_c1_wt_entry_switch_to_led_c1A0Z_switch_to_led13.vhd"]
+set_global_assignment -library "switch_to_led" -name VHDL_FILE [file join $::quartus(qip_path) "submodules/i_acl_pop_i32_count_switch_to_led_4ia_adA0Z_switch_to_led19.vhd"]
+set_global_assignment -library "switch_to_led" -name VHDL_FILE [file join $::quartus(qip_path) "submodules/i_acl_pop_i8_prev_button_n_switch_to_ledA0Z_switch_to_led15.vhd"]
+set_global_assignment -library "switch_to_led" -name VHDL_FILE [file join $::quartus(qip_path) "submodules/i_acl_push_i32_count_switch_to_led_4ia_aA0Z_switch_to_led21.vhd"]
+set_global_assignment -library "switch_to_led" -name VHDL_FILE [file join $::quartus(qip_path) "submodules/i_acl_push_i8_prev_button_n_switch_to_leA0Z_switch_to_led23.vhd"]
+set_global_assignment -library "switch_to_led" -name VHDL_FILE [file join $::quartus(qip_path) "submodules/switch_to_led_B1_start_merge_reg.vhd"]
+set_global_assignment -library "switch_to_led" -name VHDL_FILE [file join $::quartus(qip_path) "submodules/i_iowr_bl_return_unnamed_switch_to_led2_switch_to_led26.vhd"]
+set_global_assignment -library "switch_to_led" -name VHDL_FILE [file join $::quartus(qip_path) "submodules/switch_to_led_B1_start_branch.vhd"]
+set_global_assignment -library "switch_to_led" -name VHDL_FILE [file join $::quartus(qip_path) "submodules/switch_to_led_B1_start_merge.vhd"]
+set_global_assignment -library "switch_to_led" -name VHDL_FILE [file join $::quartus(qip_path) "submodules/i_acl_pipeline_keep_going_switch_to_led_sr.vhd"]
+set_global_assignment -library "switch_to_led" -name VHDL_FILE [file join $::quartus(qip_path) "submodules/i_acl_pipeline_keep_going_switch_to_led_valid_fifo.vhd"]
+set_global_assignment -library "switch_to_led" -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) "submodules/switch_to_led_internal.v"]

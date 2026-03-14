@@ -1,0 +1,675 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<deploy
+ date="2026.03.14.14:14:47"
+ outputDirectory="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/">
+ <perimeter>
+  <parameter
+     name="AUTO_GENERATION_ID"
+     type="Integer"
+     defaultValue="0"
+     onHdl="0"
+     affectsHdl="1" />
+  <parameter
+     name="AUTO_UNIQUE_ID"
+     type="String"
+     defaultValue=""
+     onHdl="0"
+     affectsHdl="1" />
+  <parameter
+     name="AUTO_DEVICE_FAMILY"
+     type="String"
+     defaultValue="Cyclone V"
+     onHdl="0"
+     affectsHdl="1" />
+  <parameter
+     name="AUTO_DEVICE"
+     type="String"
+     defaultValue="5CEFA9F23I7"
+     onHdl="0"
+     affectsHdl="1" />
+  <parameter
+     name="AUTO_DEVICE_SPEEDGRADE"
+     type="String"
+     defaultValue="7"
+     onHdl="0"
+     affectsHdl="1" />
+  <parameter
+     name="AUTO_CLOCK_CLOCK_RATE"
+     type="Long"
+     defaultValue="-1"
+     onHdl="0"
+     affectsHdl="1" />
+  <parameter
+     name="AUTO_CLOCK_CLOCK_DOMAIN"
+     type="Integer"
+     defaultValue="-1"
+     onHdl="0"
+     affectsHdl="1" />
+  <parameter
+     name="AUTO_CLOCK_RESET_DOMAIN"
+     type="Integer"
+     defaultValue="-1"
+     onHdl="0"
+     affectsHdl="1" />
+  <interface name="button_n" kind="conduit" start="0">
+   <property name="associatedClock" value="clock" />
+   <property name="associatedReset" value="reset" />
+   <port name="button_n" direction="input" role="data" width="1" />
+  </interface>
+  <interface name="call" kind="conduit" start="0">
+   <property name="associatedClock" value="clock" />
+   <property name="associatedReset" value="reset" />
+   <port name="start" direction="input" role="valid" width="1" />
+   <port name="busy" direction="output" role="stall" width="1" />
+  </interface>
+  <interface name="clock" kind="clock" start="0">
+   <property name="clockRate" value="0" />
+   <property name="externallyDriven" value="false" />
+   <property name="ptfSchematicName" value="" />
+   <port name="clock" direction="input" role="clk" width="1" />
+  </interface>
+  <interface name="reset" kind="reset" start="0">
+   <property name="associatedClock" value="clock" />
+   <property name="synchronousEdges" value="DEASSERT" />
+   <port name="resetn" direction="input" role="reset_n" width="1" />
+  </interface>
+  <interface name="reset_button_n" kind="conduit" start="0">
+   <property name="associatedClock" value="clock" />
+   <property name="associatedReset" value="reset" />
+   <port name="reset_button_n" direction="input" role="data" width="1" />
+  </interface>
+  <interface name="return" kind="conduit" start="0">
+   <property name="associatedClock" value="clock" />
+   <property name="associatedReset" value="reset" />
+   <port name="done" direction="output" role="valid" width="1" />
+   <port name="stall" direction="input" role="stall" width="1" />
+  </interface>
+  <interface name="returndata" kind="conduit" start="0">
+   <property name="associatedClock" value="clock" />
+   <property name="associatedReset" value="reset" />
+   <port name="returndata" direction="output" role="data" width="32" />
+  </interface>
+ </perimeter>
+ <entity
+   path=""
+   parameterizationKey="switch_to_led:1.0:AUTO_CLOCK_CLOCK_DOMAIN=-1,AUTO_CLOCK_CLOCK_RATE=-1,AUTO_CLOCK_RESET_DOMAIN=-1,AUTO_DEVICE=5CEFA9F23I7,AUTO_DEVICE_FAMILY=Cyclone V,AUTO_DEVICE_SPEEDGRADE=7,AUTO_GENERATION_ID=1773512083,AUTO_UNIQUE_ID=(switch_to_led_internal:1.0:)"
+   instancePathKey="switch_to_led"
+   kind="switch_to_led"
+   version="1.0"
+   name="switch_to_led">
+  <parameter name="AUTO_CLOCK_CLOCK_RATE" value="-1" />
+  <parameter name="AUTO_CLOCK_CLOCK_DOMAIN" value="-1" />
+  <parameter name="AUTO_CLOCK_RESET_DOMAIN" value="-1" />
+  <parameter name="AUTO_GENERATION_ID" value="1773512083" />
+  <parameter name="AUTO_DEVICE" value="5CEFA9F23I7" />
+  <parameter name="AUTO_DEVICE_FAMILY" value="Cyclone V" />
+  <parameter name="AUTO_UNIQUE_ID" value="" />
+  <parameter name="AUTO_DEVICE_SPEEDGRADE" value="7" />
+  <generatedFiles>
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/switch_to_led.v"
+       type="VERILOG" />
+  </generatedFiles>
+  <childGeneratedFiles>
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/dspba_library_package.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/dspba_library.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/acl_data_fifo.v"
+       type="SYSTEM_VERILOG"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/acl_fifo.v"
+       type="SYSTEM_VERILOG"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/acl_ll_fifo.v"
+       type="SYSTEM_VERILOG"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/acl_ll_ram_fifo.v"
+       type="SYSTEM_VERILOG"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/acl_valid_fifo_counter.v"
+       type="SYSTEM_VERILOG"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/acl_dspba_valid_fifo_counter.v"
+       type="SYSTEM_VERILOG"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/acl_staging_reg.v"
+       type="SYSTEM_VERILOG"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/hld_fifo.sv"
+       type="SYSTEM_VERILOG"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/hld_fifo_zero_width.sv"
+       type="SYSTEM_VERILOG"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/acl_high_speed_fifo.sv"
+       type="SYSTEM_VERILOG"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/acl_low_latency_fifo.sv"
+       type="SYSTEM_VERILOG"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/acl_zero_latency_fifo.sv"
+       type="SYSTEM_VERILOG"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/acl_fanout_pipeline.sv"
+       type="SYSTEM_VERILOG"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/acl_std_synchronizer_nocut.v"
+       type="SYSTEM_VERILOG"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/acl_tessellated_incr_decr_threshold.sv"
+       type="SYSTEM_VERILOG"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/acl_tessellated_incr_lookahead.sv"
+       type="SYSTEM_VERILOG"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/acl_reset_handler.sv"
+       type="SYSTEM_VERILOG"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/acl_lfsr.sv"
+       type="SYSTEM_VERILOG"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/acl_pop.v"
+       type="SYSTEM_VERILOG"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/acl_push.v"
+       type="SYSTEM_VERILOG"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/acl_token_fifo_counter.v"
+       type="SYSTEM_VERILOG"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/acl_pipeline.v"
+       type="SYSTEM_VERILOG"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/acl_dspba_buffer.v"
+       type="SYSTEM_VERILOG"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/acl_enable_sink.v"
+       type="SYSTEM_VERILOG"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/st_top.v"
+       type="SYSTEM_VERILOG"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/acl_full_detector.v"
+       type="SYSTEM_VERILOG"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/acl_reset_wire.v"
+       type="SYSTEM_VERILOG"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/switch_to_led_function_wrapper.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/switch_to_led_function.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/bb_switch_to_led_B0_runOnce.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/bb_switch_to_led_B0_runOnce_stall_region.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/i_acl_pop_i1_wt_limpop_switch_to_led0.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/i_acl_pop_i1_wt_limpop_switch_to_led_reg.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/i_acl_push_i1_wt_limpush_switch_to_led2.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/i_acl_push_i1_wt_limpush_switch_to_led_reg.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/switch_to_led_B0_runOnce_merge_reg.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/switch_to_led_B0_runOnce_branch.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/switch_to_led_B0_runOnce_merge.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/bb_switch_to_led_B1_start.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/bb_switch_to_led_B1_start_stall_region.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/i_iord_bl_do_unnamed_switch_to_led1_switch_to_led12.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/i_sfc_c0_wt_entry_switch_to_led_c0_enter_switch_to_led.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/i_acl_sfc_exit_c0_wt_entry_switch_to_ledA0Z_switch_to_led10.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/i_sfc_logic_c0_wt_entry_switch_to_led_c0A0Zr_switch_to_led4.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/i_acl_pipeline_keep_going_switch_to_led6.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/i_acl_push_i1_notexitcond_switch_to_led8.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/i_sfc_c1_wt_entry_switch_to_led_c1_enter_switch_to_led.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/i_acl_sfc_exit_c1_wt_entry_switch_to_ledA0Z_switch_to_led25.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/i_acl_sfc_exit_c1_wt_entry_switch_to_ledA0Z_led27_data_fifo.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/i_acl_sfc_exit_c1_wt_entry_switch_to_ledA0Zed_full_detector.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/i_sfc_logic_c1_wt_entry_switch_to_led_c1A0Z_switch_to_led13.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/i_acl_pop_i32_count_switch_to_led_4ia_adA0Z_switch_to_led19.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/i_acl_pop_i8_prev_button_n_switch_to_ledA0Z_switch_to_led15.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/i_acl_push_i32_count_switch_to_led_4ia_aA0Z_switch_to_led21.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/i_acl_push_i8_prev_button_n_switch_to_leA0Z_switch_to_led23.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/switch_to_led_B1_start_merge_reg.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/i_iowr_bl_return_unnamed_switch_to_led2_switch_to_led26.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/switch_to_led_B1_start_branch.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/switch_to_led_B1_start_merge.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/i_acl_pipeline_keep_going_switch_to_led_sr.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/i_acl_pipeline_keep_going_switch_to_led_valid_fifo.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/switch_to_led_internal.v"
+       type="SYSTEM_VERILOG"
+       attributes="" />
+  </childGeneratedFiles>
+  <sourceFiles>
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led.qsys" />
+  </sourceFiles>
+  <childSourceFiles>
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led_internal_hw.tcl" />
+  </childSourceFiles>
+  <messages>
+   <message level="Debug" culprit="switch_to_led">queue size: 0 starting:switch_to_led "switch_to_led"</message>
+   <message level="Progress" culprit="min"></message>
+   <message level="Progress" culprit="max"></message>
+   <message level="Progress" culprit="current"></message>
+   <message level="Debug">Transform: CustomInstructionTransform</message>
+   <message level="Debug">No custom instruction connections, skipping transform </message>
+   <message level="Debug" culprit="merlin_custom_instruction_transform"><![CDATA[After transform: <b>1</b> modules, <b>0</b> connections]]></message>
+   <message level="Debug">Transform: MMTransform</message>
+   <message level="Debug">Transform: InterruptMapperTransform</message>
+   <message level="Debug">Transform: InterruptSyncTransform</message>
+   <message level="Debug">Transform: InterruptFanoutTransform</message>
+   <message level="Debug">Transform: AvalonStreamingTransform</message>
+   <message level="Debug">Transform: ResetAdaptation</message>
+   <message level="Debug" culprit="switch_to_led"><![CDATA["<b>switch_to_led</b>" reuses <b>switch_to_led_internal</b> "<b>submodules/switch_to_led_internal</b>"]]></message>
+   <message level="Debug" culprit="switch_to_led">queue size: 0 starting:switch_to_led_internal "submodules/switch_to_led_internal"</message>
+   <message level="Info" culprit="switch_to_led_internal_inst"><![CDATA["<b>switch_to_led</b>" instantiated <b>switch_to_led_internal</b> "<b>switch_to_led_internal_inst</b>"]]></message>
+  </messages>
+ </entity>
+ <entity
+   path="submodules/"
+   parameterizationKey="switch_to_led_internal:1.0:"
+   instancePathKey="switch_to_led:.:switch_to_led_internal_inst"
+   kind="switch_to_led_internal"
+   version="1.0"
+   name="switch_to_led_internal">
+  <generatedFiles>
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/dspba_library_package.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/dspba_library.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/acl_data_fifo.v"
+       type="SYSTEM_VERILOG"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/acl_fifo.v"
+       type="SYSTEM_VERILOG"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/acl_ll_fifo.v"
+       type="SYSTEM_VERILOG"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/acl_ll_ram_fifo.v"
+       type="SYSTEM_VERILOG"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/acl_valid_fifo_counter.v"
+       type="SYSTEM_VERILOG"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/acl_dspba_valid_fifo_counter.v"
+       type="SYSTEM_VERILOG"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/acl_staging_reg.v"
+       type="SYSTEM_VERILOG"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/hld_fifo.sv"
+       type="SYSTEM_VERILOG"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/hld_fifo_zero_width.sv"
+       type="SYSTEM_VERILOG"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/acl_high_speed_fifo.sv"
+       type="SYSTEM_VERILOG"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/acl_low_latency_fifo.sv"
+       type="SYSTEM_VERILOG"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/acl_zero_latency_fifo.sv"
+       type="SYSTEM_VERILOG"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/acl_fanout_pipeline.sv"
+       type="SYSTEM_VERILOG"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/acl_std_synchronizer_nocut.v"
+       type="SYSTEM_VERILOG"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/acl_tessellated_incr_decr_threshold.sv"
+       type="SYSTEM_VERILOG"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/acl_tessellated_incr_lookahead.sv"
+       type="SYSTEM_VERILOG"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/acl_reset_handler.sv"
+       type="SYSTEM_VERILOG"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/acl_lfsr.sv"
+       type="SYSTEM_VERILOG"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/acl_pop.v"
+       type="SYSTEM_VERILOG"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/acl_push.v"
+       type="SYSTEM_VERILOG"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/acl_token_fifo_counter.v"
+       type="SYSTEM_VERILOG"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/acl_pipeline.v"
+       type="SYSTEM_VERILOG"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/acl_dspba_buffer.v"
+       type="SYSTEM_VERILOG"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/acl_enable_sink.v"
+       type="SYSTEM_VERILOG"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/st_top.v"
+       type="SYSTEM_VERILOG"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/acl_full_detector.v"
+       type="SYSTEM_VERILOG"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/acl_reset_wire.v"
+       type="SYSTEM_VERILOG"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/switch_to_led_function_wrapper.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/switch_to_led_function.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/bb_switch_to_led_B0_runOnce.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/bb_switch_to_led_B0_runOnce_stall_region.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/i_acl_pop_i1_wt_limpop_switch_to_led0.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/i_acl_pop_i1_wt_limpop_switch_to_led_reg.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/i_acl_push_i1_wt_limpush_switch_to_led2.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/i_acl_push_i1_wt_limpush_switch_to_led_reg.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/switch_to_led_B0_runOnce_merge_reg.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/switch_to_led_B0_runOnce_branch.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/switch_to_led_B0_runOnce_merge.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/bb_switch_to_led_B1_start.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/bb_switch_to_led_B1_start_stall_region.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/i_iord_bl_do_unnamed_switch_to_led1_switch_to_led12.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/i_sfc_c0_wt_entry_switch_to_led_c0_enter_switch_to_led.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/i_acl_sfc_exit_c0_wt_entry_switch_to_ledA0Z_switch_to_led10.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/i_sfc_logic_c0_wt_entry_switch_to_led_c0A0Zr_switch_to_led4.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/i_acl_pipeline_keep_going_switch_to_led6.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/i_acl_push_i1_notexitcond_switch_to_led8.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/i_sfc_c1_wt_entry_switch_to_led_c1_enter_switch_to_led.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/i_acl_sfc_exit_c1_wt_entry_switch_to_ledA0Z_switch_to_led25.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/i_acl_sfc_exit_c1_wt_entry_switch_to_ledA0Z_led27_data_fifo.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/i_acl_sfc_exit_c1_wt_entry_switch_to_ledA0Zed_full_detector.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/i_sfc_logic_c1_wt_entry_switch_to_led_c1A0Z_switch_to_led13.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/i_acl_pop_i32_count_switch_to_led_4ia_adA0Z_switch_to_led19.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/i_acl_pop_i8_prev_button_n_switch_to_ledA0Z_switch_to_led15.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/i_acl_push_i32_count_switch_to_led_4ia_aA0Z_switch_to_led21.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/i_acl_push_i8_prev_button_n_switch_to_leA0Z_switch_to_led23.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/switch_to_led_B1_start_merge_reg.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/i_iowr_bl_return_unnamed_switch_to_led2_switch_to_led26.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/switch_to_led_B1_start_branch.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/switch_to_led_B1_start_merge.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/i_acl_pipeline_keep_going_switch_to_led_sr.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/i_acl_pipeline_keep_going_switch_to_led_valid_fifo.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led/synthesis/submodules/switch_to_led_internal.v"
+       type="SYSTEM_VERILOG"
+       attributes="" />
+  </generatedFiles>
+  <childGeneratedFiles/>
+  <sourceFiles>
+   <file
+       path="C:/Users/luthi/Documents/TALOS-V2/hls/tester_code/hls_leds_fpga.prj/components/switch_to_led/switch_to_led_internal_hw.tcl" />
+  </sourceFiles>
+  <childSourceFiles/>
+  <instantiator instantiator="switch_to_led" as="switch_to_led_internal_inst" />
+  <messages>
+   <message level="Debug" culprit="switch_to_led">queue size: 0 starting:switch_to_led_internal "submodules/switch_to_led_internal"</message>
+   <message level="Info" culprit="switch_to_led_internal_inst"><![CDATA["<b>switch_to_led</b>" instantiated <b>switch_to_led_internal</b> "<b>switch_to_led_internal_inst</b>"]]></message>
+  </messages>
+ </entity>
+</deploy>

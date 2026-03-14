@@ -1,0 +1,665 @@
+<sld_project_info>
+  <project>
+    <hash md5_digest_80b="f75ce9f6f53a283798b8"/>
+  </project>
+  <file_info>
+    <file device="5CSEMA5F31C6" path="de1_soc_hls_leds.sof" usercode="0xFFFFFFFF"/>
+  </file_info>
+  <hub_info hub_ir_width="9" ir_width="4" node_addr_width="6" node_count="32"/>
+  <node_info>
+    <node hpath="altsource_probe:jtag_count_probe_bits[0].jtag_count_probe" instance_id="0" mfg_id="110" node_id="9" sld_node_info="0x486E00" version="0">
+      <parameters>
+        <parameter name="lpm_type" type="string" value="altsource_probe"/>
+        <parameter name="lpm_hint" type="string" value="UNUSED"/>
+        <parameter name="sld_auto_instance_index" type="string" value="YES"/>
+        <parameter name="sld_instance_index" type="dec" value="0"/>
+        <parameter name="SLD_NODE_INFO" type="dec" value="4746752"/>
+        <parameter name="sld_ir_width" type="dec" value="4"/>
+        <parameter name="instance_id" type="string" value="CNTBIT"/>
+        <parameter name="probe_width" type="dec" value="1"/>
+        <parameter name="source_width" type="dec" value="1"/>
+        <parameter name="source_initial_value" type="string" value="0"/>
+        <parameter name="enable_metastability" type="string" value="NO"/>
+      </parameters>
+      <inputs>
+        <port name="probe[0]" source="count_reg[0]"/>
+        <port name="source_clk" source="CLOCK_50"/>
+      </inputs>
+      <outputs/>
+    </node>
+    <node hpath="altsource_probe:jtag_count_probe_bits[1].jtag_count_probe" instance_id="1" mfg_id="110" node_id="9" sld_node_info="0x486E01" version="0">
+      <parameters>
+        <parameter name="lpm_type" type="string" value="altsource_probe"/>
+        <parameter name="lpm_hint" type="string" value="UNUSED"/>
+        <parameter name="sld_auto_instance_index" type="string" value="YES"/>
+        <parameter name="sld_instance_index" type="dec" value="0"/>
+        <parameter name="SLD_NODE_INFO" type="dec" value="4746752"/>
+        <parameter name="sld_ir_width" type="dec" value="4"/>
+        <parameter name="instance_id" type="string" value="CNTBIT"/>
+        <parameter name="probe_width" type="dec" value="1"/>
+        <parameter name="source_width" type="dec" value="1"/>
+        <parameter name="source_initial_value" type="string" value="0"/>
+        <parameter name="enable_metastability" type="string" value="NO"/>
+      </parameters>
+      <inputs>
+        <port name="probe[0]" source="count_reg[1]"/>
+        <port name="source_clk" source="CLOCK_50"/>
+      </inputs>
+      <outputs/>
+    </node>
+    <node hpath="altsource_probe:jtag_count_probe_bits[2].jtag_count_probe" instance_id="2" mfg_id="110" node_id="9" sld_node_info="0x486E02" version="0">
+      <parameters>
+        <parameter name="lpm_type" type="string" value="altsource_probe"/>
+        <parameter name="lpm_hint" type="string" value="UNUSED"/>
+        <parameter name="sld_auto_instance_index" type="string" value="YES"/>
+        <parameter name="sld_instance_index" type="dec" value="0"/>
+        <parameter name="SLD_NODE_INFO" type="dec" value="4746752"/>
+        <parameter name="sld_ir_width" type="dec" value="4"/>
+        <parameter name="instance_id" type="string" value="CNTBIT"/>
+        <parameter name="probe_width" type="dec" value="1"/>
+        <parameter name="source_width" type="dec" value="1"/>
+        <parameter name="source_initial_value" type="string" value="0"/>
+        <parameter name="enable_metastability" type="string" value="NO"/>
+      </parameters>
+      <inputs>
+        <port name="probe[0]" source="count_reg[2]"/>
+        <port name="source_clk" source="CLOCK_50"/>
+      </inputs>
+      <outputs/>
+    </node>
+    <node hpath="altsource_probe:jtag_count_probe_bits[3].jtag_count_probe" instance_id="3" mfg_id="110" node_id="9" sld_node_info="0x486E03" version="0">
+      <parameters>
+        <parameter name="lpm_type" type="string" value="altsource_probe"/>
+        <parameter name="lpm_hint" type="string" value="UNUSED"/>
+        <parameter name="sld_auto_instance_index" type="string" value="YES"/>
+        <parameter name="sld_instance_index" type="dec" value="0"/>
+        <parameter name="SLD_NODE_INFO" type="dec" value="4746752"/>
+        <parameter name="sld_ir_width" type="dec" value="4"/>
+        <parameter name="instance_id" type="string" value="CNTBIT"/>
+        <parameter name="probe_width" type="dec" value="1"/>
+        <parameter name="source_width" type="dec" value="1"/>
+        <parameter name="source_initial_value" type="string" value="0"/>
+        <parameter name="enable_metastability" type="string" value="NO"/>
+      </parameters>
+      <inputs>
+        <port name="probe[0]" source="count_reg[3]"/>
+        <port name="source_clk" source="CLOCK_50"/>
+      </inputs>
+      <outputs/>
+    </node>
+    <node hpath="altsource_probe:jtag_count_probe_bits[4].jtag_count_probe" instance_id="4" mfg_id="110" node_id="9" sld_node_info="0x486E04" version="0">
+      <parameters>
+        <parameter name="lpm_type" type="string" value="altsource_probe"/>
+        <parameter name="lpm_hint" type="string" value="UNUSED"/>
+        <parameter name="sld_auto_instance_index" type="string" value="YES"/>
+        <parameter name="sld_instance_index" type="dec" value="0"/>
+        <parameter name="SLD_NODE_INFO" type="dec" value="4746752"/>
+        <parameter name="sld_ir_width" type="dec" value="4"/>
+        <parameter name="instance_id" type="string" value="CNTBIT"/>
+        <parameter name="probe_width" type="dec" value="1"/>
+        <parameter name="source_width" type="dec" value="1"/>
+        <parameter name="source_initial_value" type="string" value="0"/>
+        <parameter name="enable_metastability" type="string" value="NO"/>
+      </parameters>
+      <inputs>
+        <port name="probe[0]" source="count_reg[4]"/>
+        <port name="source_clk" source="CLOCK_50"/>
+      </inputs>
+      <outputs/>
+    </node>
+    <node hpath="altsource_probe:jtag_count_probe_bits[5].jtag_count_probe" instance_id="5" mfg_id="110" node_id="9" sld_node_info="0x486E05" version="0">
+      <parameters>
+        <parameter name="lpm_type" type="string" value="altsource_probe"/>
+        <parameter name="lpm_hint" type="string" value="UNUSED"/>
+        <parameter name="sld_auto_instance_index" type="string" value="YES"/>
+        <parameter name="sld_instance_index" type="dec" value="0"/>
+        <parameter name="SLD_NODE_INFO" type="dec" value="4746752"/>
+        <parameter name="sld_ir_width" type="dec" value="4"/>
+        <parameter name="instance_id" type="string" value="CNTBIT"/>
+        <parameter name="probe_width" type="dec" value="1"/>
+        <parameter name="source_width" type="dec" value="1"/>
+        <parameter name="source_initial_value" type="string" value="0"/>
+        <parameter name="enable_metastability" type="string" value="NO"/>
+      </parameters>
+      <inputs>
+        <port name="probe[0]" source="count_reg[5]"/>
+        <port name="source_clk" source="CLOCK_50"/>
+      </inputs>
+      <outputs/>
+    </node>
+    <node hpath="altsource_probe:jtag_count_probe_bits[6].jtag_count_probe" instance_id="6" mfg_id="110" node_id="9" sld_node_info="0x486E06" version="0">
+      <parameters>
+        <parameter name="lpm_type" type="string" value="altsource_probe"/>
+        <parameter name="lpm_hint" type="string" value="UNUSED"/>
+        <parameter name="sld_auto_instance_index" type="string" value="YES"/>
+        <parameter name="sld_instance_index" type="dec" value="0"/>
+        <parameter name="SLD_NODE_INFO" type="dec" value="4746752"/>
+        <parameter name="sld_ir_width" type="dec" value="4"/>
+        <parameter name="instance_id" type="string" value="CNTBIT"/>
+        <parameter name="probe_width" type="dec" value="1"/>
+        <parameter name="source_width" type="dec" value="1"/>
+        <parameter name="source_initial_value" type="string" value="0"/>
+        <parameter name="enable_metastability" type="string" value="NO"/>
+      </parameters>
+      <inputs>
+        <port name="probe[0]" source="count_reg[6]"/>
+        <port name="source_clk" source="CLOCK_50"/>
+      </inputs>
+      <outputs/>
+    </node>
+    <node hpath="altsource_probe:jtag_count_probe_bits[7].jtag_count_probe" instance_id="7" mfg_id="110" node_id="9" sld_node_info="0x486E07" version="0">
+      <parameters>
+        <parameter name="lpm_type" type="string" value="altsource_probe"/>
+        <parameter name="lpm_hint" type="string" value="UNUSED"/>
+        <parameter name="sld_auto_instance_index" type="string" value="YES"/>
+        <parameter name="sld_instance_index" type="dec" value="0"/>
+        <parameter name="SLD_NODE_INFO" type="dec" value="4746752"/>
+        <parameter name="sld_ir_width" type="dec" value="4"/>
+        <parameter name="instance_id" type="string" value="CNTBIT"/>
+        <parameter name="probe_width" type="dec" value="1"/>
+        <parameter name="source_width" type="dec" value="1"/>
+        <parameter name="source_initial_value" type="string" value="0"/>
+        <parameter name="enable_metastability" type="string" value="NO"/>
+      </parameters>
+      <inputs>
+        <port name="probe[0]" source="count_reg[7]"/>
+        <port name="source_clk" source="CLOCK_50"/>
+      </inputs>
+      <outputs/>
+    </node>
+    <node hpath="altsource_probe:jtag_count_probe_bits[8].jtag_count_probe" instance_id="8" mfg_id="110" node_id="9" sld_node_info="0x486E08" version="0">
+      <parameters>
+        <parameter name="lpm_type" type="string" value="altsource_probe"/>
+        <parameter name="lpm_hint" type="string" value="UNUSED"/>
+        <parameter name="sld_auto_instance_index" type="string" value="YES"/>
+        <parameter name="sld_instance_index" type="dec" value="0"/>
+        <parameter name="SLD_NODE_INFO" type="dec" value="4746752"/>
+        <parameter name="sld_ir_width" type="dec" value="4"/>
+        <parameter name="instance_id" type="string" value="CNTBIT"/>
+        <parameter name="probe_width" type="dec" value="1"/>
+        <parameter name="source_width" type="dec" value="1"/>
+        <parameter name="source_initial_value" type="string" value="0"/>
+        <parameter name="enable_metastability" type="string" value="NO"/>
+      </parameters>
+      <inputs>
+        <port name="probe[0]" source="count_reg[8]"/>
+        <port name="source_clk" source="CLOCK_50"/>
+      </inputs>
+      <outputs/>
+    </node>
+    <node hpath="altsource_probe:jtag_count_probe_bits[9].jtag_count_probe" instance_id="9" mfg_id="110" node_id="9" sld_node_info="0x486E09" version="0">
+      <parameters>
+        <parameter name="lpm_type" type="string" value="altsource_probe"/>
+        <parameter name="lpm_hint" type="string" value="UNUSED"/>
+        <parameter name="sld_auto_instance_index" type="string" value="YES"/>
+        <parameter name="sld_instance_index" type="dec" value="0"/>
+        <parameter name="SLD_NODE_INFO" type="dec" value="4746752"/>
+        <parameter name="sld_ir_width" type="dec" value="4"/>
+        <parameter name="instance_id" type="string" value="CNTBIT"/>
+        <parameter name="probe_width" type="dec" value="1"/>
+        <parameter name="source_width" type="dec" value="1"/>
+        <parameter name="source_initial_value" type="string" value="0"/>
+        <parameter name="enable_metastability" type="string" value="NO"/>
+      </parameters>
+      <inputs>
+        <port name="probe[0]" source="count_reg[9]"/>
+        <port name="source_clk" source="CLOCK_50"/>
+      </inputs>
+      <outputs/>
+    </node>
+    <node hpath="altsource_probe:jtag_count_probe_bits[10].jtag_count_probe" instance_id="10" mfg_id="110" node_id="9" sld_node_info="0x486E0A" version="0">
+      <parameters>
+        <parameter name="lpm_type" type="string" value="altsource_probe"/>
+        <parameter name="lpm_hint" type="string" value="UNUSED"/>
+        <parameter name="sld_auto_instance_index" type="string" value="YES"/>
+        <parameter name="sld_instance_index" type="dec" value="0"/>
+        <parameter name="SLD_NODE_INFO" type="dec" value="4746752"/>
+        <parameter name="sld_ir_width" type="dec" value="4"/>
+        <parameter name="instance_id" type="string" value="CNTBIT"/>
+        <parameter name="probe_width" type="dec" value="1"/>
+        <parameter name="source_width" type="dec" value="1"/>
+        <parameter name="source_initial_value" type="string" value="0"/>
+        <parameter name="enable_metastability" type="string" value="NO"/>
+      </parameters>
+      <inputs>
+        <port name="probe[0]" source="count_reg[10]"/>
+        <port name="source_clk" source="CLOCK_50"/>
+      </inputs>
+      <outputs/>
+    </node>
+    <node hpath="altsource_probe:jtag_count_probe_bits[11].jtag_count_probe" instance_id="11" mfg_id="110" node_id="9" sld_node_info="0x486E0B" version="0">
+      <parameters>
+        <parameter name="lpm_type" type="string" value="altsource_probe"/>
+        <parameter name="lpm_hint" type="string" value="UNUSED"/>
+        <parameter name="sld_auto_instance_index" type="string" value="YES"/>
+        <parameter name="sld_instance_index" type="dec" value="0"/>
+        <parameter name="SLD_NODE_INFO" type="dec" value="4746752"/>
+        <parameter name="sld_ir_width" type="dec" value="4"/>
+        <parameter name="instance_id" type="string" value="CNTBIT"/>
+        <parameter name="probe_width" type="dec" value="1"/>
+        <parameter name="source_width" type="dec" value="1"/>
+        <parameter name="source_initial_value" type="string" value="0"/>
+        <parameter name="enable_metastability" type="string" value="NO"/>
+      </parameters>
+      <inputs>
+        <port name="probe[0]" source="count_reg[11]"/>
+        <port name="source_clk" source="CLOCK_50"/>
+      </inputs>
+      <outputs/>
+    </node>
+    <node hpath="altsource_probe:jtag_count_probe_bits[12].jtag_count_probe" instance_id="12" mfg_id="110" node_id="9" sld_node_info="0x486E0C" version="0">
+      <parameters>
+        <parameter name="lpm_type" type="string" value="altsource_probe"/>
+        <parameter name="lpm_hint" type="string" value="UNUSED"/>
+        <parameter name="sld_auto_instance_index" type="string" value="YES"/>
+        <parameter name="sld_instance_index" type="dec" value="0"/>
+        <parameter name="SLD_NODE_INFO" type="dec" value="4746752"/>
+        <parameter name="sld_ir_width" type="dec" value="4"/>
+        <parameter name="instance_id" type="string" value="CNTBIT"/>
+        <parameter name="probe_width" type="dec" value="1"/>
+        <parameter name="source_width" type="dec" value="1"/>
+        <parameter name="source_initial_value" type="string" value="0"/>
+        <parameter name="enable_metastability" type="string" value="NO"/>
+      </parameters>
+      <inputs>
+        <port name="probe[0]" source="count_reg[12]"/>
+        <port name="source_clk" source="CLOCK_50"/>
+      </inputs>
+      <outputs/>
+    </node>
+    <node hpath="altsource_probe:jtag_count_probe_bits[13].jtag_count_probe" instance_id="13" mfg_id="110" node_id="9" sld_node_info="0x486E0D" version="0">
+      <parameters>
+        <parameter name="lpm_type" type="string" value="altsource_probe"/>
+        <parameter name="lpm_hint" type="string" value="UNUSED"/>
+        <parameter name="sld_auto_instance_index" type="string" value="YES"/>
+        <parameter name="sld_instance_index" type="dec" value="0"/>
+        <parameter name="SLD_NODE_INFO" type="dec" value="4746752"/>
+        <parameter name="sld_ir_width" type="dec" value="4"/>
+        <parameter name="instance_id" type="string" value="CNTBIT"/>
+        <parameter name="probe_width" type="dec" value="1"/>
+        <parameter name="source_width" type="dec" value="1"/>
+        <parameter name="source_initial_value" type="string" value="0"/>
+        <parameter name="enable_metastability" type="string" value="NO"/>
+      </parameters>
+      <inputs>
+        <port name="probe[0]" source="count_reg[13]"/>
+        <port name="source_clk" source="CLOCK_50"/>
+      </inputs>
+      <outputs/>
+    </node>
+    <node hpath="altsource_probe:jtag_count_probe_bits[14].jtag_count_probe" instance_id="14" mfg_id="110" node_id="9" sld_node_info="0x486E0E" version="0">
+      <parameters>
+        <parameter name="lpm_type" type="string" value="altsource_probe"/>
+        <parameter name="lpm_hint" type="string" value="UNUSED"/>
+        <parameter name="sld_auto_instance_index" type="string" value="YES"/>
+        <parameter name="sld_instance_index" type="dec" value="0"/>
+        <parameter name="SLD_NODE_INFO" type="dec" value="4746752"/>
+        <parameter name="sld_ir_width" type="dec" value="4"/>
+        <parameter name="instance_id" type="string" value="CNTBIT"/>
+        <parameter name="probe_width" type="dec" value="1"/>
+        <parameter name="source_width" type="dec" value="1"/>
+        <parameter name="source_initial_value" type="string" value="0"/>
+        <parameter name="enable_metastability" type="string" value="NO"/>
+      </parameters>
+      <inputs>
+        <port name="probe[0]" source="count_reg[14]"/>
+        <port name="source_clk" source="CLOCK_50"/>
+      </inputs>
+      <outputs/>
+    </node>
+    <node hpath="altsource_probe:jtag_count_probe_bits[15].jtag_count_probe" instance_id="15" mfg_id="110" node_id="9" sld_node_info="0x486E0F" version="0">
+      <parameters>
+        <parameter name="lpm_type" type="string" value="altsource_probe"/>
+        <parameter name="lpm_hint" type="string" value="UNUSED"/>
+        <parameter name="sld_auto_instance_index" type="string" value="YES"/>
+        <parameter name="sld_instance_index" type="dec" value="0"/>
+        <parameter name="SLD_NODE_INFO" type="dec" value="4746752"/>
+        <parameter name="sld_ir_width" type="dec" value="4"/>
+        <parameter name="instance_id" type="string" value="CNTBIT"/>
+        <parameter name="probe_width" type="dec" value="1"/>
+        <parameter name="source_width" type="dec" value="1"/>
+        <parameter name="source_initial_value" type="string" value="0"/>
+        <parameter name="enable_metastability" type="string" value="NO"/>
+      </parameters>
+      <inputs>
+        <port name="probe[0]" source="count_reg[15]"/>
+        <port name="source_clk" source="CLOCK_50"/>
+      </inputs>
+      <outputs/>
+    </node>
+    <node hpath="altsource_probe:jtag_count_probe_bits[16].jtag_count_probe" instance_id="16" mfg_id="110" node_id="9" sld_node_info="0x486E10" version="0">
+      <parameters>
+        <parameter name="lpm_type" type="string" value="altsource_probe"/>
+        <parameter name="lpm_hint" type="string" value="UNUSED"/>
+        <parameter name="sld_auto_instance_index" type="string" value="YES"/>
+        <parameter name="sld_instance_index" type="dec" value="0"/>
+        <parameter name="SLD_NODE_INFO" type="dec" value="4746752"/>
+        <parameter name="sld_ir_width" type="dec" value="4"/>
+        <parameter name="instance_id" type="string" value="CNTBIT"/>
+        <parameter name="probe_width" type="dec" value="1"/>
+        <parameter name="source_width" type="dec" value="1"/>
+        <parameter name="source_initial_value" type="string" value="0"/>
+        <parameter name="enable_metastability" type="string" value="NO"/>
+      </parameters>
+      <inputs>
+        <port name="probe[0]" source="count_reg[16]"/>
+        <port name="source_clk" source="CLOCK_50"/>
+      </inputs>
+      <outputs/>
+    </node>
+    <node hpath="altsource_probe:jtag_count_probe_bits[17].jtag_count_probe" instance_id="17" mfg_id="110" node_id="9" sld_node_info="0x486E11" version="0">
+      <parameters>
+        <parameter name="lpm_type" type="string" value="altsource_probe"/>
+        <parameter name="lpm_hint" type="string" value="UNUSED"/>
+        <parameter name="sld_auto_instance_index" type="string" value="YES"/>
+        <parameter name="sld_instance_index" type="dec" value="0"/>
+        <parameter name="SLD_NODE_INFO" type="dec" value="4746752"/>
+        <parameter name="sld_ir_width" type="dec" value="4"/>
+        <parameter name="instance_id" type="string" value="CNTBIT"/>
+        <parameter name="probe_width" type="dec" value="1"/>
+        <parameter name="source_width" type="dec" value="1"/>
+        <parameter name="source_initial_value" type="string" value="0"/>
+        <parameter name="enable_metastability" type="string" value="NO"/>
+      </parameters>
+      <inputs>
+        <port name="probe[0]" source="count_reg[17]"/>
+        <port name="source_clk" source="CLOCK_50"/>
+      </inputs>
+      <outputs/>
+    </node>
+    <node hpath="altsource_probe:jtag_count_probe_bits[18].jtag_count_probe" instance_id="18" mfg_id="110" node_id="9" sld_node_info="0x486E12" version="0">
+      <parameters>
+        <parameter name="lpm_type" type="string" value="altsource_probe"/>
+        <parameter name="lpm_hint" type="string" value="UNUSED"/>
+        <parameter name="sld_auto_instance_index" type="string" value="YES"/>
+        <parameter name="sld_instance_index" type="dec" value="0"/>
+        <parameter name="SLD_NODE_INFO" type="dec" value="4746752"/>
+        <parameter name="sld_ir_width" type="dec" value="4"/>
+        <parameter name="instance_id" type="string" value="CNTBIT"/>
+        <parameter name="probe_width" type="dec" value="1"/>
+        <parameter name="source_width" type="dec" value="1"/>
+        <parameter name="source_initial_value" type="string" value="0"/>
+        <parameter name="enable_metastability" type="string" value="NO"/>
+      </parameters>
+      <inputs>
+        <port name="probe[0]" source="count_reg[18]"/>
+        <port name="source_clk" source="CLOCK_50"/>
+      </inputs>
+      <outputs/>
+    </node>
+    <node hpath="altsource_probe:jtag_count_probe_bits[19].jtag_count_probe" instance_id="19" mfg_id="110" node_id="9" sld_node_info="0x486E13" version="0">
+      <parameters>
+        <parameter name="lpm_type" type="string" value="altsource_probe"/>
+        <parameter name="lpm_hint" type="string" value="UNUSED"/>
+        <parameter name="sld_auto_instance_index" type="string" value="YES"/>
+        <parameter name="sld_instance_index" type="dec" value="0"/>
+        <parameter name="SLD_NODE_INFO" type="dec" value="4746752"/>
+        <parameter name="sld_ir_width" type="dec" value="4"/>
+        <parameter name="instance_id" type="string" value="CNTBIT"/>
+        <parameter name="probe_width" type="dec" value="1"/>
+        <parameter name="source_width" type="dec" value="1"/>
+        <parameter name="source_initial_value" type="string" value="0"/>
+        <parameter name="enable_metastability" type="string" value="NO"/>
+      </parameters>
+      <inputs>
+        <port name="probe[0]" source="count_reg[19]"/>
+        <port name="source_clk" source="CLOCK_50"/>
+      </inputs>
+      <outputs/>
+    </node>
+    <node hpath="altsource_probe:jtag_count_probe_bits[20].jtag_count_probe" instance_id="20" mfg_id="110" node_id="9" sld_node_info="0x486E14" version="0">
+      <parameters>
+        <parameter name="lpm_type" type="string" value="altsource_probe"/>
+        <parameter name="lpm_hint" type="string" value="UNUSED"/>
+        <parameter name="sld_auto_instance_index" type="string" value="YES"/>
+        <parameter name="sld_instance_index" type="dec" value="0"/>
+        <parameter name="SLD_NODE_INFO" type="dec" value="4746752"/>
+        <parameter name="sld_ir_width" type="dec" value="4"/>
+        <parameter name="instance_id" type="string" value="CNTBIT"/>
+        <parameter name="probe_width" type="dec" value="1"/>
+        <parameter name="source_width" type="dec" value="1"/>
+        <parameter name="source_initial_value" type="string" value="0"/>
+        <parameter name="enable_metastability" type="string" value="NO"/>
+      </parameters>
+      <inputs>
+        <port name="probe[0]" source="count_reg[20]"/>
+        <port name="source_clk" source="CLOCK_50"/>
+      </inputs>
+      <outputs/>
+    </node>
+    <node hpath="altsource_probe:jtag_count_probe_bits[21].jtag_count_probe" instance_id="21" mfg_id="110" node_id="9" sld_node_info="0x486E15" version="0">
+      <parameters>
+        <parameter name="lpm_type" type="string" value="altsource_probe"/>
+        <parameter name="lpm_hint" type="string" value="UNUSED"/>
+        <parameter name="sld_auto_instance_index" type="string" value="YES"/>
+        <parameter name="sld_instance_index" type="dec" value="0"/>
+        <parameter name="SLD_NODE_INFO" type="dec" value="4746752"/>
+        <parameter name="sld_ir_width" type="dec" value="4"/>
+        <parameter name="instance_id" type="string" value="CNTBIT"/>
+        <parameter name="probe_width" type="dec" value="1"/>
+        <parameter name="source_width" type="dec" value="1"/>
+        <parameter name="source_initial_value" type="string" value="0"/>
+        <parameter name="enable_metastability" type="string" value="NO"/>
+      </parameters>
+      <inputs>
+        <port name="probe[0]" source="count_reg[21]"/>
+        <port name="source_clk" source="CLOCK_50"/>
+      </inputs>
+      <outputs/>
+    </node>
+    <node hpath="altsource_probe:jtag_count_probe_bits[22].jtag_count_probe" instance_id="22" mfg_id="110" node_id="9" sld_node_info="0x486E16" version="0">
+      <parameters>
+        <parameter name="lpm_type" type="string" value="altsource_probe"/>
+        <parameter name="lpm_hint" type="string" value="UNUSED"/>
+        <parameter name="sld_auto_instance_index" type="string" value="YES"/>
+        <parameter name="sld_instance_index" type="dec" value="0"/>
+        <parameter name="SLD_NODE_INFO" type="dec" value="4746752"/>
+        <parameter name="sld_ir_width" type="dec" value="4"/>
+        <parameter name="instance_id" type="string" value="CNTBIT"/>
+        <parameter name="probe_width" type="dec" value="1"/>
+        <parameter name="source_width" type="dec" value="1"/>
+        <parameter name="source_initial_value" type="string" value="0"/>
+        <parameter name="enable_metastability" type="string" value="NO"/>
+      </parameters>
+      <inputs>
+        <port name="probe[0]" source="count_reg[22]"/>
+        <port name="source_clk" source="CLOCK_50"/>
+      </inputs>
+      <outputs/>
+    </node>
+    <node hpath="altsource_probe:jtag_count_probe_bits[23].jtag_count_probe" instance_id="23" mfg_id="110" node_id="9" sld_node_info="0x486E17" version="0">
+      <parameters>
+        <parameter name="lpm_type" type="string" value="altsource_probe"/>
+        <parameter name="lpm_hint" type="string" value="UNUSED"/>
+        <parameter name="sld_auto_instance_index" type="string" value="YES"/>
+        <parameter name="sld_instance_index" type="dec" value="0"/>
+        <parameter name="SLD_NODE_INFO" type="dec" value="4746752"/>
+        <parameter name="sld_ir_width" type="dec" value="4"/>
+        <parameter name="instance_id" type="string" value="CNTBIT"/>
+        <parameter name="probe_width" type="dec" value="1"/>
+        <parameter name="source_width" type="dec" value="1"/>
+        <parameter name="source_initial_value" type="string" value="0"/>
+        <parameter name="enable_metastability" type="string" value="NO"/>
+      </parameters>
+      <inputs>
+        <port name="probe[0]" source="count_reg[23]"/>
+        <port name="source_clk" source="CLOCK_50"/>
+      </inputs>
+      <outputs/>
+    </node>
+    <node hpath="altsource_probe:jtag_count_probe_bits[24].jtag_count_probe" instance_id="24" mfg_id="110" node_id="9" sld_node_info="0x486E18" version="0">
+      <parameters>
+        <parameter name="lpm_type" type="string" value="altsource_probe"/>
+        <parameter name="lpm_hint" type="string" value="UNUSED"/>
+        <parameter name="sld_auto_instance_index" type="string" value="YES"/>
+        <parameter name="sld_instance_index" type="dec" value="0"/>
+        <parameter name="SLD_NODE_INFO" type="dec" value="4746752"/>
+        <parameter name="sld_ir_width" type="dec" value="4"/>
+        <parameter name="instance_id" type="string" value="CNTBIT"/>
+        <parameter name="probe_width" type="dec" value="1"/>
+        <parameter name="source_width" type="dec" value="1"/>
+        <parameter name="source_initial_value" type="string" value="0"/>
+        <parameter name="enable_metastability" type="string" value="NO"/>
+      </parameters>
+      <inputs>
+        <port name="probe[0]" source="count_reg[24]"/>
+        <port name="source_clk" source="CLOCK_50"/>
+      </inputs>
+      <outputs/>
+    </node>
+    <node hpath="altsource_probe:jtag_count_probe_bits[25].jtag_count_probe" instance_id="25" mfg_id="110" node_id="9" sld_node_info="0x486E19" version="0">
+      <parameters>
+        <parameter name="lpm_type" type="string" value="altsource_probe"/>
+        <parameter name="lpm_hint" type="string" value="UNUSED"/>
+        <parameter name="sld_auto_instance_index" type="string" value="YES"/>
+        <parameter name="sld_instance_index" type="dec" value="0"/>
+        <parameter name="SLD_NODE_INFO" type="dec" value="4746752"/>
+        <parameter name="sld_ir_width" type="dec" value="4"/>
+        <parameter name="instance_id" type="string" value="CNTBIT"/>
+        <parameter name="probe_width" type="dec" value="1"/>
+        <parameter name="source_width" type="dec" value="1"/>
+        <parameter name="source_initial_value" type="string" value="0"/>
+        <parameter name="enable_metastability" type="string" value="NO"/>
+      </parameters>
+      <inputs>
+        <port name="probe[0]" source="count_reg[25]"/>
+        <port name="source_clk" source="CLOCK_50"/>
+      </inputs>
+      <outputs/>
+    </node>
+    <node hpath="altsource_probe:jtag_count_probe_bits[26].jtag_count_probe" instance_id="26" mfg_id="110" node_id="9" sld_node_info="0x486E1A" version="0">
+      <parameters>
+        <parameter name="lpm_type" type="string" value="altsource_probe"/>
+        <parameter name="lpm_hint" type="string" value="UNUSED"/>
+        <parameter name="sld_auto_instance_index" type="string" value="YES"/>
+        <parameter name="sld_instance_index" type="dec" value="0"/>
+        <parameter name="SLD_NODE_INFO" type="dec" value="4746752"/>
+        <parameter name="sld_ir_width" type="dec" value="4"/>
+        <parameter name="instance_id" type="string" value="CNTBIT"/>
+        <parameter name="probe_width" type="dec" value="1"/>
+        <parameter name="source_width" type="dec" value="1"/>
+        <parameter name="source_initial_value" type="string" value="0"/>
+        <parameter name="enable_metastability" type="string" value="NO"/>
+      </parameters>
+      <inputs>
+        <port name="probe[0]" source="count_reg[26]"/>
+        <port name="source_clk" source="CLOCK_50"/>
+      </inputs>
+      <outputs/>
+    </node>
+    <node hpath="altsource_probe:jtag_count_probe_bits[27].jtag_count_probe" instance_id="27" mfg_id="110" node_id="9" sld_node_info="0x486E1B" version="0">
+      <parameters>
+        <parameter name="lpm_type" type="string" value="altsource_probe"/>
+        <parameter name="lpm_hint" type="string" value="UNUSED"/>
+        <parameter name="sld_auto_instance_index" type="string" value="YES"/>
+        <parameter name="sld_instance_index" type="dec" value="0"/>
+        <parameter name="SLD_NODE_INFO" type="dec" value="4746752"/>
+        <parameter name="sld_ir_width" type="dec" value="4"/>
+        <parameter name="instance_id" type="string" value="CNTBIT"/>
+        <parameter name="probe_width" type="dec" value="1"/>
+        <parameter name="source_width" type="dec" value="1"/>
+        <parameter name="source_initial_value" type="string" value="0"/>
+        <parameter name="enable_metastability" type="string" value="NO"/>
+      </parameters>
+      <inputs>
+        <port name="probe[0]" source="count_reg[27]"/>
+        <port name="source_clk" source="CLOCK_50"/>
+      </inputs>
+      <outputs/>
+    </node>
+    <node hpath="altsource_probe:jtag_count_probe_bits[28].jtag_count_probe" instance_id="28" mfg_id="110" node_id="9" sld_node_info="0x486E1C" version="0">
+      <parameters>
+        <parameter name="lpm_type" type="string" value="altsource_probe"/>
+        <parameter name="lpm_hint" type="string" value="UNUSED"/>
+        <parameter name="sld_auto_instance_index" type="string" value="YES"/>
+        <parameter name="sld_instance_index" type="dec" value="0"/>
+        <parameter name="SLD_NODE_INFO" type="dec" value="4746752"/>
+        <parameter name="sld_ir_width" type="dec" value="4"/>
+        <parameter name="instance_id" type="string" value="CNTBIT"/>
+        <parameter name="probe_width" type="dec" value="1"/>
+        <parameter name="source_width" type="dec" value="1"/>
+        <parameter name="source_initial_value" type="string" value="0"/>
+        <parameter name="enable_metastability" type="string" value="NO"/>
+      </parameters>
+      <inputs>
+        <port name="probe[0]" source="count_reg[28]"/>
+        <port name="source_clk" source="CLOCK_50"/>
+      </inputs>
+      <outputs/>
+    </node>
+    <node hpath="altsource_probe:jtag_count_probe_bits[29].jtag_count_probe" instance_id="29" mfg_id="110" node_id="9" sld_node_info="0x486E1D" version="0">
+      <parameters>
+        <parameter name="lpm_type" type="string" value="altsource_probe"/>
+        <parameter name="lpm_hint" type="string" value="UNUSED"/>
+        <parameter name="sld_auto_instance_index" type="string" value="YES"/>
+        <parameter name="sld_instance_index" type="dec" value="0"/>
+        <parameter name="SLD_NODE_INFO" type="dec" value="4746752"/>
+        <parameter name="sld_ir_width" type="dec" value="4"/>
+        <parameter name="instance_id" type="string" value="CNTBIT"/>
+        <parameter name="probe_width" type="dec" value="1"/>
+        <parameter name="source_width" type="dec" value="1"/>
+        <parameter name="source_initial_value" type="string" value="0"/>
+        <parameter name="enable_metastability" type="string" value="NO"/>
+      </parameters>
+      <inputs>
+        <port name="probe[0]" source="count_reg[29]"/>
+        <port name="source_clk" source="CLOCK_50"/>
+      </inputs>
+      <outputs/>
+    </node>
+    <node hpath="altsource_probe:jtag_count_probe_bits[30].jtag_count_probe" instance_id="30" mfg_id="110" node_id="9" sld_node_info="0x486E1E" version="0">
+      <parameters>
+        <parameter name="lpm_type" type="string" value="altsource_probe"/>
+        <parameter name="lpm_hint" type="string" value="UNUSED"/>
+        <parameter name="sld_auto_instance_index" type="string" value="YES"/>
+        <parameter name="sld_instance_index" type="dec" value="0"/>
+        <parameter name="SLD_NODE_INFO" type="dec" value="4746752"/>
+        <parameter name="sld_ir_width" type="dec" value="4"/>
+        <parameter name="instance_id" type="string" value="CNTBIT"/>
+        <parameter name="probe_width" type="dec" value="1"/>
+        <parameter name="source_width" type="dec" value="1"/>
+        <parameter name="source_initial_value" type="string" value="0"/>
+        <parameter name="enable_metastability" type="string" value="NO"/>
+      </parameters>
+      <inputs>
+        <port name="probe[0]" source="count_reg[30]"/>
+        <port name="source_clk" source="CLOCK_50"/>
+      </inputs>
+      <outputs/>
+    </node>
+    <node hpath="altsource_probe:jtag_count_probe_bits[31].jtag_count_probe" instance_id="31" mfg_id="110" node_id="9" sld_node_info="0x486E1F" version="0">
+      <parameters>
+        <parameter name="lpm_type" type="string" value="altsource_probe"/>
+        <parameter name="lpm_hint" type="string" value="UNUSED"/>
+        <parameter name="sld_auto_instance_index" type="string" value="YES"/>
+        <parameter name="sld_instance_index" type="dec" value="0"/>
+        <parameter name="SLD_NODE_INFO" type="dec" value="4746752"/>
+        <parameter name="sld_ir_width" type="dec" value="4"/>
+        <parameter name="instance_id" type="string" value="CNTBIT"/>
+        <parameter name="probe_width" type="dec" value="1"/>
+        <parameter name="source_width" type="dec" value="1"/>
+        <parameter name="source_initial_value" type="string" value="0"/>
+        <parameter name="enable_metastability" type="string" value="NO"/>
+      </parameters>
+      <inputs>
+        <port name="probe[0]" source="count_reg[31]"/>
+        <port name="source_clk" source="CLOCK_50"/>
+      </inputs>
+      <outputs/>
+    </node>
+  </node_info>
+  <sld_infos>
+    <sld_info hpath="switch_to_led:switch_to_led_inst" name="switch_to_led_inst">
+      <assignment_values>
+        <assignment_value text="QSYS_NAME switch_to_led HAS_SOPCINFO 1 GENERATION_ID 1773512083"/>
+      </assignment_values>
+      <parameters/>
+    </sld_info>
+    <sld_info hpath="sld_hub:auto_hub|alt_sld_fab:\instrumentation_fabric_with_node_gen:instrumentation_fabric" library="alt_sld_fab" name="instrumentation_fabric">
+      <assignment_values>
+        <assignment_value text="QSYS_NAME alt_sld_fab HAS_SOPCINFO 1"/>
+      </assignment_values>
+      <parameters/>
+    </sld_info>
+  </sld_infos>
+</sld_project_info>

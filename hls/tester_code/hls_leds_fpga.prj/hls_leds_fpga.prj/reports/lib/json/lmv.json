@@ -1,0 +1,54 @@
+{
+  "nodes":
+  [
+    {
+      "type":"interface"
+      , "id":11
+      , "name":"button_n"
+      , "debug":
+      [
+        [
+          {
+            "filename":"hls_leds.cpp"
+            , "line":3
+          }
+        ]
+      ]
+      , "details":
+      [
+        {
+          "type":"table"
+          , "Stable":"No"
+          , "Width":"1 bit"
+          , "Component":"switch_to_led"
+        }
+      ]
+    }
+    , {
+      "type":"interface"
+      , "id":12
+      , "name":"reset_button_n"
+      , "debug":
+      [
+        [
+          {
+            "filename":"hls_leds.cpp"
+            , "line":3
+          }
+        ]
+      ]
+      , "details":
+      [
+        {
+          "type":"table"
+          , "Stable":"No"
+          , "Width":"1 bit"
+          , "Component":"switch_to_led"
+        }
+      ]
+    }
+  ]
+  , "links":
+  [
+  ]
+}

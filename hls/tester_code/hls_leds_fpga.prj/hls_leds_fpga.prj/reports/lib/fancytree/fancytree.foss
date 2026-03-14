@@ -1,0 +1,12 @@
+[foss]
+name = fancytree
+version = 2.19.0
+description = Javascript tree view plugin for jQuery with support for persistence, checkboxes, and lazy loading. 
+case = 435971
+source = true
+binary = false
+modified = false
+usage = redistributed
+license_type = MIT
+license_url = https://github.com/mar10/fancytree/blob/master/LICENSE.txt 
+download_url = https://github.com/mar10/fancytree/

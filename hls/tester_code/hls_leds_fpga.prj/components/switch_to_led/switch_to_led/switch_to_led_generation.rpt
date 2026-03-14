@@ -1,0 +1,15 @@
+Info: Starting: Create HDL design files for synthesis
+Info: qsys-generate C:\Users\luthi\Documents\TALOS-V2\hls\tester_code\hls_leds_fpga.prj\components\switch_to_led\switch_to_led.qsys --synthesis=VERILOG --output-directory=C:\Users\luthi\Documents\TALOS-V2\hls\tester_code\hls_leds_fpga.prj\components\switch_to_led\switch_to_led\synthesis --family="Cyclone V" --part=5CEFA9F23I7
+Progress: Loading switch_to_led/switch_to_led.qsys
+Progress: Reading input file
+Progress: Adding switch_to_led_internal_inst [switch_to_led_internal 1.0]
+Progress: Parameterizing module switch_to_led_internal_inst
+Progress: Building connections
+Progress: Parameterizing connections
+Progress: Validating
+Progress: Done reading input file
+Info: switch_to_led: Generating switch_to_led "switch_to_led" for QUARTUS_SYNTH
+Info: switch_to_led_internal_inst: "switch_to_led" instantiated switch_to_led_internal "switch_to_led_internal_inst"
+Info: switch_to_led: Done "switch_to_led" with 2 modules, 65 files
+Info: qsys-generate succeeded.
+Info: Finished: Create HDL design files for synthesis

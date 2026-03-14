@@ -1,0 +1,29 @@
+# This Quartus settings file sets up a project to measure the area and fmax of
+# your components in a full Quartus compilation for the targeted device
+
+# Family and device are derived from the -march argument to i++
+set_global_assignment -name FAMILY "Cyclone V"
+set_global_assignment -name DEVICE 5CEFA9F23I7
+
+# This script parses the Quartus reports and generates a summary that can be viewed via reports/report.html or reports/lib/json/quartus.json
+set_global_assignment -name POST_FLOW_SCRIPT_FILE "quartus_sh:generate_report.tcl"
+
+# Files implementing a basic registered instance of each component
+set_global_assignment -name TOP_LEVEL_ENTITY quartus_compile
+set_global_assignment -name SDC_FILE quartus_compile.sdc
+set_global_assignment -name QSYS_FILE ../components/switch_to_led/switch_to_led.qsys
+set_global_assignment -name SYSTEMVERILOG_FILE quartus_compile.v
+
+# Partitions are used to separate the component logic from the project harness when tallying area results
+set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id component_partition
+set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id component_partition
+set_instance_assignment -name PARTITION_HIERARCHY component_switch_to_led -to "switch_to_led:switch_to_led_inst" -section_id component_partition
+
+# No need to generate a bitstream for this compile so save time by skipping the assembler
+set_global_assignment -name FLOW_DISABLE_ASSEMBLER ON
+
+# Use the --quartus-seed flag to i++, or modify this setting to run other seeds
+# set_global_assignment -name SEED 0
+# This assignment configures all component I/Os as virtual pins to more accurately
+# model placement and routing in a larger system
+set_instance_assignment -name VIRTUAL_PIN ON -to *
