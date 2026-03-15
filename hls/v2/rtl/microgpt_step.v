@@ -62,6 +62,13 @@ integer i;
 reg signed [31:0] acc_next;
 reg signed [15:0] value16;
 reg signed [15:0] logit16;
+reg [15:0] sample_weight;
+reg [7:0] sample_choice;
+reg sample_found;
+reg signed [31:0] sample_delta;
+reg [15:0] sample_temp;
+reg [31:0] sample_rng;
+reg [7:0] sample_candidate;
 
 function [31:0] xorshift32;
     input [31:0] value;
@@ -99,6 +106,38 @@ function signed [15:0] scale_q16;
         else
             rounded = prod - 48'sd32768;
         scale_q16 = sat16(rounded >>> 16);
+    end
+endfunction
+
+function [15:0] exp_weight_from_delta;
+    input signed [31:0] delta_q10;
+    reg [4:0] idx;
+    begin
+        if (delta_q10 >= 0) begin
+            exp_weight_from_delta = 16'd256;
+        end else begin
+            idx = (-delta_q10) >>> 7;
+            if (idx > 5'd15)
+                idx = 5'd15;
+            case (idx)
+                5'd0: exp_weight_from_delta = 16'd256;
+                5'd1: exp_weight_from_delta = 16'd181;
+                5'd2: exp_weight_from_delta = 16'd128;
+                5'd3: exp_weight_from_delta = 16'd91;
+                5'd4: exp_weight_from_delta = 16'd64;
+                5'd5: exp_weight_from_delta = 16'd45;
+                5'd6: exp_weight_from_delta = 16'd32;
+                5'd7: exp_weight_from_delta = 16'd23;
+                5'd8: exp_weight_from_delta = 16'd16;
+                5'd9: exp_weight_from_delta = 16'd11;
+                5'd10: exp_weight_from_delta = 16'd8;
+                5'd11: exp_weight_from_delta = 16'd6;
+                5'd12: exp_weight_from_delta = 16'd4;
+                5'd13: exp_weight_from_delta = 16'd3;
+                5'd14: exp_weight_from_delta = 16'd2;
+                default: exp_weight_from_delta = 16'd1;
+            endcase
+        end
     end
 endfunction
 
@@ -241,9 +280,31 @@ always @(posedge clock or negedge resetn) begin
                     for (i = 0; i < EMBED_DIM; i = i + 1) begin
                         hidden_state[i] <= hidden_next[i];
                     end
+                    sample_temp = temperature_q8_8;
+                    sample_choice = best_idx_reg;
+                    sample_found = 1'b0;
+                    sample_rng = rng_state_out;
+                    for (i = 0; i < 4; i = i + 1) begin
+                        sample_candidate = sample_rng[4:0];
+                        if (sample_candidate >= VOCAB_SIZE[7:0])
+                            sample_candidate = sample_candidate - VOCAB_SIZE[7:0];
+                        sample_delta = $signed(logits[sample_candidate]) - $signed(best_logit_reg);
+                        if (sample_temp <= 16'd128)
+                            sample_delta = sample_delta <<< 1;
+                        else if (sample_temp > 16'd256 && sample_temp <= 16'd512)
+                            sample_delta = sample_delta >>> 1;
+                        else if (sample_temp > 16'd512)
+                            sample_delta = sample_delta >>> 2;
+                        sample_weight = exp_weight_from_delta(sample_delta);
+                        if (!sample_found && (sample_rng[15:8] < sample_weight)) begin
+                            sample_choice = sample_candidate;
+                            sample_found = 1'b1;
+                        end
+                        sample_rng = xorshift32(sample_rng);
+                    end
                     argmax_token <= best_idx_reg;
-                    if (best_idx_reg == BOS_TOKEN)
-                        next_token <= second_idx_reg;
+                    if (sample_mode)
+                        next_token <= sample_choice;
                     else
                         next_token <= best_idx_reg;
                     top1_logit_q11 <= best_logit_reg;
@@ -269,8 +330,5 @@ always @(posedge clock or negedge resetn) begin
         end
     end
 end
-
-wire unused_sample_mode = sample_mode;
-wire [15:0] unused_temperature_q8_8 = temperature_q8_8;
 
 endmodule

@@ -44,12 +44,17 @@ if {$service_path eq ""} {
 }
 open_service master $service_path
 
-set prompt_tokens $::env(MGPT_PROMPT_TOKENS)
-set prompt_len [llength $prompt_tokens]
 set max_gen $::env(MGPT_MAX_GEN)
 set temp_q8_8 $::env(MGPT_TEMP_Q8_8)
 set seed $::env(MGPT_SEED)
 set stream_tokens [mgpt_bool_env MGPT_STREAM_TOKENS 0]
+set sample_count 1
+if {[info exists ::env(MGPT_SAMPLE_COUNT)]} {
+    set sample_count [expr {int($::env(MGPT_SAMPLE_COUNT))}]
+    if {$sample_count < 1} {
+        set sample_count 1
+    }
+}
 set poll_ms 1
 if {[info exists ::env(MGPT_POLL_MS)]} {
     set poll_ms [expr {int($::env(MGPT_POLL_MS))}]
@@ -58,63 +63,53 @@ if {[info exists ::env(MGPT_POLL_MS)]} {
     }
 }
 
-master_write_32 $service_path 0x08 0x00000002
-master_write_32 $service_path 0x10 [expr {($temp_q8_8 << 16) | (($max_gen & 0xff) << 8) | ($prompt_len & 0xff)}]
-master_write_32 $service_path 0x14 $seed
+for {set sample_idx 0} {$sample_idx < $sample_count} {incr sample_idx} {
+    set sample_seed [expr {$seed + $sample_idx}]
+    puts "SAMPLE_BEGIN=$sample_idx"
+    flush stdout
 
-set idx 0
-foreach tok $prompt_tokens {
-    master_write_32 $service_path [expr {0x20 + ($idx * 4)}] $tok
-    incr idx
-}
+    master_write_32 $service_path 0x08 0x00000002
+    master_write_32 $service_path 0x10 [expr {($temp_q8_8 << 16) | (($max_gen & 0xff) << 8)}]
+    master_write_32 $service_path 0x14 $sample_seed
+    master_write_32 $service_path 0x08 0x00000001
 
-master_write_32 $service_path 0x08 0x00000001
-
-set timeout 5000
-set status 0
-set streamed_len 0
-while {$timeout > 0} {
-    set status [mgpt_read32 $service_path 0x0C]
-    set out_len_now [expr {($status >> 16) & 0xff}]
-    if {$stream_tokens && ($out_len_now > $streamed_len)} {
-        for {set i $streamed_len} {$i < $out_len_now} {incr i} {
-            set token_word [mgpt_read32 $service_path [expr {0x60 + ($i * 4)}]]
-            puts "STREAM_TOKEN=[expr {$token_word & 0xff}]"
-            flush stdout
+    set timeout 5000
+    set status 0
+    set streamed_len 0
+    while {$timeout > 0} {
+        set status [mgpt_read32 $service_path 0x0C]
+        set out_len_now [expr {($status >> 16) & 0xff}]
+        if {$stream_tokens && ($out_len_now > $streamed_len)} {
+            for {set i $streamed_len} {$i < $out_len_now} {incr i} {
+                set token_word [mgpt_read32 $service_path [expr {0x60 + ($i * 4)}]]
+                puts "STREAM_TOKEN=[expr {$token_word & 0xff}]"
+                flush stdout
+            }
+            set streamed_len $out_len_now
         }
-        set streamed_len $out_len_now
+        if {$status & 0x8} {
+            puts "ERROR=1"
+            break
+        }
+        if {$status & 0x4} {
+            puts "DONE=1"
+            break
+        }
+        after $poll_ms
+        incr timeout -1
     }
-    if {$status & 0x8} {
-        puts "ERROR=1"
-        break
+
+    puts [format {STATUS[%d]=0x%08X} $sample_idx $status]
+    set out_len [expr {($status >> 16) & 0xff}]
+    puts [format {OUT_LEN[%d]=%d} $sample_idx $out_len]
+
+    set outputs {}
+    for {set i 0} {$i < $out_len} {incr i} {
+        lappend outputs [mgpt_read32 $service_path [expr {0x60 + ($i * 4)}]]
     }
-    if {$status & 0x4} {
-        puts "DONE=1"
-        break
-    }
-    after $poll_ms
-    incr timeout -1
+    puts [format {OUTPUT_TOKENS[%d]=%s} $sample_idx $outputs]
+    puts "SAMPLE_END=$sample_idx"
+    flush stdout
 }
-
-puts [format "STATUS=0x%08X" $status]
-set out_len [expr {($status >> 16) & 0xff}]
-puts "OUT_LEN=$out_len"
-
-set outputs {}
-for {set i 0} {$i < $out_len} {incr i} {
-    lappend outputs [mgpt_read32 $service_path [expr {0x60 + ($i * 4)}]]
-}
-puts "OUTPUT_TOKENS=$outputs"
-
-set last0 [mgpt_read32 $service_path 0x18]
-set last1 [mgpt_read32 $service_path 0x1C]
-puts [format "LAST0=0x%08X" $last0]
-puts [format "LAST1=0x%08X" $last1]
-
-set logits_words {}
-for {set i 0} {$i < 14} {incr i} {
-    lappend logits_words [mgpt_read32 $service_path [expr {0xA0 + ($i * 4)}]]
-}
-puts "LOGITS_WORDS=$logits_words"
 
 close_service master $service_path

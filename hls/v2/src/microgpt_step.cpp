@@ -115,6 +115,33 @@ static uint16_t exp_weight_from_delta(int32_t delta_q10) {
   return k_exp_lut_q8[idx];
 }
 
+static unsigned char sample_from_logits(const int16_t logits[MGPT_VOCAB_SIZE],
+                                        int best_idx,
+                                        uint16_t temperature_q8_8,
+                                        uint32_t rng_state) {
+  uint32_t state = rng_state;
+  for (int attempt = 0; attempt < 4; ++attempt) {
+    unsigned char candidate = (unsigned char)(state & 31);
+    if (candidate >= MGPT_VOCAB_SIZE) {
+      candidate = (unsigned char)(candidate - MGPT_VOCAB_SIZE);
+    }
+    int32_t delta = (int32_t)logits[candidate] - (int32_t)logits[best_idx];
+    if (temperature_q8_8 <= 128) {
+      delta <<= 1;
+    } else if (temperature_q8_8 > 256 && temperature_q8_8 <= 512) {
+      delta >>= 1;
+    } else if (temperature_q8_8 > 512) {
+      delta >>= 2;
+    }
+    uint16_t weight = exp_weight_from_delta(delta);
+    if (((state >> 8) & 0xFF) < weight) {
+      return candidate;
+    }
+    state = xorshift32(state);
+  }
+  return (unsigned char)best_idx;
+}
+
 static uint64_t pack4(const int16_t logits[MGPT_VOCAB_SIZE], int base) {
   uint64_t word = 0;
   for (int i = 0; i < 4; ++i) {
@@ -271,10 +298,12 @@ component void microgpt_step(
   top2_token = (unsigned char)second;
   top2_logit_q11 = logits_q11[second];
 
-  (void)sample_mode;
-  (void)temperature_q8_8;
   rng_state_out = xorshift32(rng_state_in);
-  next_token = (argmax_token == BOS_TOKEN) ? top2_token : argmax_token;
+  if (sample_mode) {
+    next_token = sample_from_logits(logits_q11, best, temperature_q8_8, rng_state_out);
+  } else {
+    next_token = argmax_token;
+  }
 
   logits_pack0 = pack4(logits_q11, 0);
   logits_pack1 = pack4(logits_q11, 4);

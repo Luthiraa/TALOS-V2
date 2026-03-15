@@ -100,7 +100,7 @@ microgpt_step microgpt_step_inst (
     .token_in(step_token_reg),
     .pos_in(current_pos_reg),
     .clear_cache(step_clear_reg),
-    .sample_mode(sw[1]),
+    .sample_mode(1'b1),
     .temperature_q8_8(temperature_reg),
     .rng_state_in(rng_state_reg),
     .next_token(step_next_token),
@@ -239,7 +239,7 @@ always @(posedge clk) begin
                         step_token_reg <= BOS_TOKEN;
                         rng_state_reg <= rng_seed_reg;
                         step_clear_reg <= 1'b1;
-                        if ((prompt_len_reg > 8'd15) || ((prompt_len_reg + max_gen_reg) > 8'd15)) begin
+                        if (max_gen_reg > 8'd15) begin
                             error_reg <= 1'b1;
                         end else begin
                             running_reg <= 1'b1;
@@ -276,18 +276,7 @@ always @(posedge clk) begin
                     rng_state_reg <= step_rng_state;
                     step_clear_reg <= 1'b0;
 
-                    if (prompt_index_reg < prompt_len_reg) begin
-                        if (current_pos_reg == 8'd15) begin
-                            running_reg <= 1'b0;
-                            error_reg <= 1'b1;
-                            state_reg <= ST_IDLE;
-                        end else begin
-                            step_token_reg <= prompt_mem[prompt_index_reg];
-                            prompt_index_reg <= prompt_index_reg + 8'd1;
-                            current_pos_reg <= current_pos_reg + 8'd1;
-                            state_reg <= ST_START;
-                        end
-                    end else if ((step_next_token == BOS_TOKEN) || (gen_count_reg >= max_gen_reg) || (current_pos_reg == 8'd15)) begin
+                    if ((step_next_token == BOS_TOKEN) || (gen_count_reg >= max_gen_reg) || (current_pos_reg == 8'd15)) begin
                         running_reg <= 1'b0;
                         done_reg <= 1'b1;
                         state_reg <= ST_IDLE;
@@ -324,9 +313,9 @@ always @(*) begin
         6'h03: read_data_comb = {
             current_pos_reg,
             out_len_reg,
-            prompt_len_reg,
+            8'd0,
             1'b0,
-            sw[1],
+            1'b1,
             1'b1,
             host_toggle_reg,
             error_reg,
@@ -334,7 +323,7 @@ always @(*) begin
             running_reg,
             ~running_reg
         };
-        6'h04: read_data_comb = {temperature_reg, max_gen_reg, prompt_len_reg};
+        6'h04: read_data_comb = {temperature_reg, max_gen_reg, 8'd0};
         6'h05: read_data_comb = rng_seed_reg;
         6'h06: read_data_comb = {last_top1_logit_reg[15:0], last_argmax_token_reg, last_sampled_token_reg};
         6'h07: read_data_comb = {last_top2_logit_reg[15:0], 8'd0, last_top2_token_reg};
