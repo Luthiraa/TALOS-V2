@@ -1,0 +1,3 @@
+QUARTUS_VERSION = "18.1"
+DATE = "21:00:00  March 14, 2026"
+PROJECT_REVISION = "de1_soc_microgpt"

@@ -1,0 +1,60 @@
+{
+  "source_parameter_count": 4192,
+  "vocab": "abcdefghijklmnopqrstuvwxyz^",
+  "token_bos_eos": 26,
+  "context_len": 16,
+  "embed_dim": 16,
+  "heads": 4,
+  "head_dim": 4,
+  "mlp_dim": 64,
+  "act_frac_bits": 11,
+  "scale_frac_bits": 16,
+  "shapes": {
+    "wte": [
+      27,
+      16
+    ],
+    "wpe": [
+      16,
+      16
+    ],
+    "lm_head": [
+      27,
+      16
+    ],
+    "c_attn_w": [
+      48,
+      16
+    ],
+    "c_proj_w": [
+      16,
+      16
+    ],
+    "c_fc_w": [
+      64,
+      16
+    ],
+    "c_proj2_w": [
+      16,
+      64
+    ]
+  },
+  "packed_bytes_estimate": {
+    "wte_q": 864,
+    "wpe_q": 512,
+    "wq_q": 256,
+    "wq_scale_q16": 32,
+    "wk_q": 256,
+    "wk_scale_q16": 32,
+    "wv_q": 256,
+    "wv_scale_q16": 32,
+    "wo_q": 256,
+    "wo_scale_q16": 32,
+    "fc1_q": 1024,
+    "fc1_scale_q16": 128,
+    "fc2_q": 1024,
+    "fc2_scale_q16": 32,
+    "lm_q": 432,
+    "lm_scale_q16": 54
+  }
+}
