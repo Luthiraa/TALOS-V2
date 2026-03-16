@@ -90,7 +90,7 @@ assign dbg_out_len = out_len_reg;
 assign dbg_last_token = last_sampled_token_reg;
 assign dbg_state = state_reg;
 
-microgpt_step microgpt_step_inst (
+microgpt_step_hls_adapter microgpt_step_inst (
     .clock(clk),
     .resetn(resetn),
     .start(step_start_reg),

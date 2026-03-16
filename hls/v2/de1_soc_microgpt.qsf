@@ -4,7 +4,8 @@ set_global_assignment -name TOP_LEVEL_ENTITY de1_soc_microgpt
 
 set_global_assignment -name VERILOG_FILE rtl/de1_soc_microgpt.v
 set_global_assignment -name VERILOG_FILE rtl/microgpt_mmio.v
-set_global_assignment -name VERILOG_FILE rtl/microgpt_step.v
+set_global_assignment -name VERILOG_FILE rtl/microgpt_step_hls_adapter.v
+set_global_assignment -name QIP_FILE microgpt_step_fpga.prj/components/microgpt_step/synthesis/microgpt_step_direct.qip
 set_global_assignment -name SDC_FILE de1_soc_microgpt.sdc
 set_global_assignment -name QIP_FILE jtag_microgpt_bridge/synthesis/jtag_microgpt_bridge.qip
 

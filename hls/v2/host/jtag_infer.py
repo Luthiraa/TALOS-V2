@@ -2,6 +2,7 @@ import argparse
 import os
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -54,6 +55,9 @@ def run_generator(args: argparse.Namespace) -> int:
     current_tokens = []
     meta_lines = []
     sample_statuses = []
+    total_tokens = 0
+    t_start = None
+    t_end = None
 
     for raw_line in proc.stdout:
         line = normalize_console_line(raw_line)
@@ -62,14 +66,18 @@ def run_generator(args: argparse.Namespace) -> int:
         if line.startswith("SAMPLE_BEGIN="):
             current_tokens = []
             sample_index = int(parse_value(line))
+            if t_start is None:
+                t_start = time.perf_counter()
             continue
         if line.startswith("STREAM_TOKEN="):
             token = int(parse_value(line), 0) & 0xFF
             current_tokens.append(token)
+            total_tokens += 1
             sys.stdout.write(decode_tokens([token]))
             sys.stdout.flush()
             continue
         if line.startswith("SAMPLE_END="):
+            t_end = time.perf_counter()
             if current_tokens:
                 sys.stdout.write("\n")
             else:
@@ -98,6 +106,20 @@ def run_generator(args: argparse.Namespace) -> int:
         print(f"samples={len(sample_statuses)}")
         for idx, status in sample_statuses:
             print(f"sample[{idx}] status=0x{status:08X} done={bool(status & STATUS_DONE)} error={bool(status & STATUS_ERROR)}")
+
+    # ── benchmark summary ──
+    if t_start is not None and t_end is not None and total_tokens > 0:
+        elapsed = t_end - t_start
+        tks = total_tokens / elapsed if elapsed > 0 else float("inf")
+        ms_per_tok = (elapsed / total_tokens) * 1000 if total_tokens > 0 else 0
+        print()
+        print("-" * 40)
+        print(f"  Benchmark")
+        print(f"  Tokens generated : {total_tokens}")
+        print(f"  Total time       : {elapsed:.3f} s")
+        print(f"  Throughput       : {tks:.2f} tok/s")
+        print(f"  Latency          : {ms_per_tok:.1f} ms/tok")
+        print("-" * 40)
 
     return 0
 
