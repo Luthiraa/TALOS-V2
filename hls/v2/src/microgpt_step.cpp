@@ -73,8 +73,20 @@ static uint16_t exp_weight_from_delta(int32_t delta_q10) {
   return lut[idx];
 }
 
+static inline int32_t dot_i8_i16(
+    const int8_t weights[EMBED_DIM],
+    const int16_t vec[EMBED_DIM]) {
+  int32_t acc = 0;
+#pragma unroll
+  for (int col = 0; col < EMBED_DIM; ++col) {
+    acc += (int32_t)weights[col] * (int32_t)vec[col];
+  }
+  return acc;
+}
+
 static uint64_t pack4(const int16_t logits[VOCAB_SIZE], int base) {
   uint64_t word = 0;
+#pragma unroll
   for (int i = 0; i < 4; ++i) {
     int idx = base + i;
     uint16_t lane = (idx < VOCAB_SIZE) ? (uint16_t)logits[idx] : 0;
@@ -91,6 +103,7 @@ component void microgpt_step(stream_in<StepInputs> &in_stream,
   StepOutputs out;
 
   if (in.clear_cache) {
+#pragma unroll
     for (int i = 0; i < EMBED_DIM; ++i) {
       hidden_state[i] = 0;
     }
@@ -100,6 +113,7 @@ component void microgpt_step(stream_in<StepInputs> &in_stream,
   int16_t hidden_next[EMBED_DIM];
   int16_t logits[VOCAB_SIZE];
 
+#pragma unroll
   for (int i = 0; i < EMBED_DIM; ++i) {
     int32_t value =
         (int32_t)g_wte_q[in.token_in][i] +
@@ -108,12 +122,17 @@ component void microgpt_step(stream_in<StepInputs> &in_stream,
     x_vec[i] = sat16(value);
   }
 
+#pragma ii 1
   for (int row = 0; row < EMBED_DIM; ++row) {
-    int32_t acc = 0;
-    for (int col = 0; col < EMBED_DIM; ++col) {
-      acc += (int32_t)g_wq_q[row][col] * (int32_t)x_vec[col];
-    }
+    int32_t acc = dot_i8_i16(g_wq_q[row], x_vec);
     hidden_next[row] = scale_q16(acc, g_wq_scale_q16[row]);
+  }
+
+  // Compute all logits first, then reduce for top-1/top-2.
+#pragma ii 1
+  for (int row = 0; row < VOCAB_SIZE; ++row) {
+    int32_t acc = dot_i8_i16(g_lm_q[row], x_vec);
+    logits[row] = scale_q16(acc, g_lm_scale_q16[row]);
   }
 
   int best_idx = 0;
@@ -121,14 +140,9 @@ component void microgpt_step(stream_in<StepInputs> &in_stream,
   int16_t best_logit = (int16_t)0x8000;
   int16_t second_logit = (int16_t)0x8000;
 
+#pragma ii 1
   for (int row = 0; row < VOCAB_SIZE; ++row) {
-    int32_t acc = 0;
-    for (int col = 0; col < EMBED_DIM; ++col) {
-      acc += (int32_t)g_lm_q[row][col] * (int32_t)x_vec[col];
-    }
-
-    int16_t logit = scale_q16(acc, g_lm_scale_q16[row]);
-    logits[row] = logit;
+    int16_t logit = logits[row];
 
     if (logit > best_logit) {
       second_logit = best_logit;
@@ -148,6 +162,7 @@ component void microgpt_step(stream_in<StepInputs> &in_stream,
   bool sample_found = false;
   uint32_t sample_rng = out.rng_state_out;
 
+#pragma unroll
   for (int i = 0; i < 4; ++i) {
     uint8_t sample_candidate = (uint8_t)(sample_rng & 31);
     if (sample_candidate >= VOCAB_SIZE) {
@@ -174,6 +189,7 @@ component void microgpt_step(stream_in<StepInputs> &in_stream,
     sample_rng = xorshift32(sample_rng);
   }
 
+#pragma unroll
   for (int i = 0; i < EMBED_DIM; ++i) {
     hidden_state[i] = hidden_next[i];
   }
