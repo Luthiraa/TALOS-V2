@@ -10,6 +10,8 @@ static const int EMBED_DIM = 16;
 static const int VOCAB_SIZE = 27;
 static const int HIDDEN_TILE_ROWS = 2;
 static const int LOGIT_TILE_ROWS = 3;
+static_assert((EMBED_DIM % HIDDEN_TILE_ROWS) == 0, "Invalid hidden tile size");
+static_assert((VOCAB_SIZE % LOGIT_TILE_ROWS) == 0, "Invalid logit tile size");
 
 struct __attribute__((packed)) StepInputs {
   uint8_t token_in;
@@ -75,18 +77,19 @@ static inline uint16_t exp_weight_from_delta(int32_t delta_q10) {
   return lut[idx];
 }
 
-static inline int32_t dot_i8_i16_16(const int8_t w_row[EMBED_DIM],
-                                    const int16_t x_vec[EMBED_DIM]) {
-  // 4-way unrolled accumulation to shorten the adder dependency chain.
+static inline int32_t dot_i8_i16(const int8_t weights[EMBED_DIM],
+                                 const int16_t vec[EMBED_DIM]) {
+  // 4-way partial sums shorten the adder dependency chain.
   int32_t acc0 = 0;
   int32_t acc1 = 0;
   int32_t acc2 = 0;
   int32_t acc3 = 0;
+#pragma unroll
   for (int col = 0; col < EMBED_DIM; col += 4) {
-    acc0 += (int32_t)w_row[col + 0] * (int32_t)x_vec[col + 0];
-    acc1 += (int32_t)w_row[col + 1] * (int32_t)x_vec[col + 1];
-    acc2 += (int32_t)w_row[col + 2] * (int32_t)x_vec[col + 2];
-    acc3 += (int32_t)w_row[col + 3] * (int32_t)x_vec[col + 3];
+    acc0 += (int32_t)weights[col + 0] * (int32_t)vec[col + 0];
+    acc1 += (int32_t)weights[col + 1] * (int32_t)vec[col + 1];
+    acc2 += (int32_t)weights[col + 2] * (int32_t)vec[col + 2];
+    acc3 += (int32_t)weights[col + 3] * (int32_t)vec[col + 3];
   }
   return (acc0 + acc1) + (acc2 + acc3);
 }
@@ -129,12 +132,12 @@ component void microgpt_step(stream_in<StepInputs> &in_stream,
     x_vec[i] = sat16(value);
   }
 
-  // Tile rows to increase reuse of x_vec while keeping control simple for HLS.
+#pragma ii 1
   for (int row_base = 0; row_base < EMBED_DIM; row_base += HIDDEN_TILE_ROWS) {
 #pragma unroll
-    for (int lane = 0; lane < HIDDEN_TILE_ROWS; ++lane) {
-      int row = row_base + lane;
-      int32_t acc = dot_i8_i16_16(g_wq_q[row], x_vec);
+    for (int t = 0; t < HIDDEN_TILE_ROWS; ++t) {
+      int row = row_base + t;
+      int32_t acc = dot_i8_i16(g_wq_q[row], x_vec);
       hidden_next[row] = scale_q16(acc, g_wq_scale_q16[row]);
     }
   }
@@ -144,18 +147,24 @@ component void microgpt_step(stream_in<StepInputs> &in_stream,
   int16_t best_logit = (int16_t)0x8000;
   int16_t second_logit = (int16_t)0x8000;
 
+  // Tile logits and top-2 update together to remove an extra full reduction pass.
+#pragma ii 1
   for (int row_base = 0; row_base < VOCAB_SIZE; row_base += LOGIT_TILE_ROWS) {
-#pragma unroll
-    for (int lane = 0; lane < LOGIT_TILE_ROWS; ++lane) {
-      int row = row_base + lane;
-      if (row >= VOCAB_SIZE) {
-        continue;
-      }
+    int16_t logit_tile[LOGIT_TILE_ROWS];
 
-      int32_t acc = dot_i8_i16_16(g_lm_q[row], x_vec);
+#pragma unroll
+    for (int t = 0; t < LOGIT_TILE_ROWS; ++t) {
+      int row = row_base + t;
+      int32_t acc = dot_i8_i16(g_lm_q[row], x_vec);
       int16_t logit = scale_q16(acc, g_lm_scale_q16[row]);
       logits[row] = logit;
+      logit_tile[t] = logit;
+    }
 
+#pragma unroll
+    for (int t = 0; t < LOGIT_TILE_ROWS; ++t) {
+      int row = row_base + t;
+      int16_t logit = logit_tile[t];
       if (logit > best_logit) {
         second_logit = best_logit;
         second_idx = best_idx;
@@ -174,6 +183,14 @@ component void microgpt_step(stream_in<StepInputs> &in_stream,
   uint8_t sample_choice = (uint8_t)best_idx;
   bool sample_found = false;
   uint32_t sample_rng = out.rng_state_out;
+  int sample_shift = 0;
+  if (sample_temp <= 128) {
+    sample_shift = 1;
+  } else if (sample_temp > 512) {
+    sample_shift = -2;
+  } else if (sample_temp > 256) {
+    sample_shift = -1;
+  }
 
 #pragma unroll
   for (int i = 0; i < 4; ++i) {
@@ -185,12 +202,10 @@ component void microgpt_step(stream_in<StepInputs> &in_stream,
     int32_t sample_delta =
         (int32_t)logits[sample_candidate] - (int32_t)best_logit;
 
-    if (sample_temp <= 128) {
-      sample_delta <<= 1;
-    } else if (sample_temp > 256 && sample_temp <= 512) {
-      sample_delta >>= 1;
-    } else if (sample_temp > 512) {
-      sample_delta >>= 2;
+    if (sample_shift > 0) {
+      sample_delta <<= sample_shift;
+    } else if (sample_shift < 0) {
+      sample_delta >>= -sample_shift;
     }
 
     uint16_t sample_weight = exp_weight_from_delta(sample_delta);
