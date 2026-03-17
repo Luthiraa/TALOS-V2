@@ -102,6 +102,8 @@ for {set sample_idx 0} {$sample_idx < $sample_count} {incr sample_idx} {
     puts [format {STATUS[%d]=0x%08X} $sample_idx $status]
     set out_len [expr {($status >> 16) & 0xff}]
     puts [format {OUT_LEN[%d]=%d} $sample_idx $out_len]
+    set perf_cycles [mgpt_read32 $service_path 0xD8]
+    puts [format {STREAM_CYCLES[%d]=%u} $sample_idx $perf_cycles]
 
     set outputs {}
     for {set i 0} {$i < $out_len} {incr i} {

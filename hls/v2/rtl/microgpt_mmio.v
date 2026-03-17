@@ -57,6 +57,7 @@ reg [7:0] last_argmax_token_reg = 8'd0;
 reg signed [15:0] last_top1_logit_reg = 16'sd0;
 reg [7:0] last_top2_token_reg = 8'd0;
 reg signed [15:0] last_top2_logit_reg = 16'sd0;
+reg [31:0] perf_cycles_reg = 32'd0;
 reg read_pending_reg = 1'b0;
 
 reg key0_prev = 1'b1;
@@ -148,6 +149,7 @@ always @(posedge clk) begin
         last_top1_logit_reg <= 16'sd0;
         last_top2_token_reg <= 8'd0;
         last_top2_logit_reg <= 16'sd0;
+        perf_cycles_reg <= 32'd0;
         key0_prev <= 1'b1;
         key1_prev <= 1'b1;
         start_req <= 1'b0;
@@ -175,6 +177,10 @@ always @(posedge clk) begin
 
         if (avs_write || avs_read) begin
             host_toggle_reg <= ~host_toggle_reg;
+        end
+
+        if (state_reg != ST_IDLE) begin
+            perf_cycles_reg <= perf_cycles_reg + 32'd1;
         end
 
         if (key0_prev && !key_n[0]) begin
@@ -222,6 +228,7 @@ always @(posedge clk) begin
             last_top1_logit_reg <= 16'sd0;
             last_top2_token_reg <= 8'd0;
             last_top2_logit_reg <= 16'sd0;
+            perf_cycles_reg <= 32'd0;
             for (out_idx = 0; out_idx < 16; out_idx = out_idx + 1) begin
                 output_mem[out_idx] <= 8'd0;
             end
@@ -238,6 +245,7 @@ always @(posedge clk) begin
                         gen_count_reg <= 8'd0;
                         step_token_reg <= BOS_TOKEN;
                         rng_state_reg <= rng_seed_reg;
+                        perf_cycles_reg <= 32'd0;
                         step_clear_reg <= 1'b1;
                         if (max_gen_reg > 8'd15) begin
                             error_reg <= 1'b1;
@@ -327,6 +335,7 @@ always @(*) begin
         6'h05: read_data_comb = rng_seed_reg;
         6'h06: read_data_comb = {last_top1_logit_reg[15:0], last_argmax_token_reg, last_sampled_token_reg};
         6'h07: read_data_comb = {last_top2_logit_reg[15:0], 8'd0, last_top2_token_reg};
+        6'h36: read_data_comb = perf_cycles_reg;
         default: begin
             if ((avs_address[9:2] >= 6'h08) && (avs_address[9:2] < 6'h18)) begin
                 read_data_comb = {24'd0, prompt_mem[avs_address[5:2] - 4'h8]};
