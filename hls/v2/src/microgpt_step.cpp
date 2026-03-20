@@ -9,10 +9,6 @@ using namespace ihc;
 static const int EMBED_DIM = 16;
 static const int VOCAB_SIZE = 27;
 static const int HIDDEN_TILE_ROWS = 2;
-static const int LOGIT_TILE_ROWS = 3;
-static_assert((EMBED_DIM % HIDDEN_TILE_ROWS) == 0, "Invalid hidden tile size");
-static_assert((VOCAB_SIZE % LOGIT_TILE_ROWS) == 0, "Invalid logit tile size");
-
 struct __attribute__((packed)) StepInputs {
   uint8_t token_in;
   uint8_t pos_in;
@@ -38,14 +34,14 @@ struct __attribute__((packed)) StepOutputs {
   uint64_t logits_pack6;
 };
 
-static inline uint32_t xorshift32(uint32_t value) {
+static uint32_t xorshift32(uint32_t value) {
   value ^= value << 13;
   value ^= value >> 17;
   value ^= value << 5;
   return value;
 }
 
-static inline int16_t sat16(int32_t value) {
+static int16_t sat16(int32_t value) {
   if (value > 32767) {
     return 32767;
   }
@@ -55,13 +51,13 @@ static inline int16_t sat16(int32_t value) {
   return (int16_t)value;
 }
 
-static inline int16_t scale_q16(int32_t acc, uint16_t scale) {
+static int16_t scale_q16(int32_t acc, uint16_t scale) {
   int64_t prod = (int64_t)acc * (int64_t)scale;
   int64_t rounded = (prod >= 0) ? (prod + 32768) : (prod - 32768);
   return sat16((int32_t)(rounded >> 16));
 }
 
-static inline uint16_t exp_weight_from_delta(int32_t delta_q10) {
+static uint16_t exp_weight_from_delta(int32_t delta_q10) {
   if (delta_q10 >= 0) {
     return 256;
   }
@@ -77,9 +73,9 @@ static inline uint16_t exp_weight_from_delta(int32_t delta_q10) {
   return lut[idx];
 }
 
-static inline int32_t dot_i8_i16(const int8_t weights[EMBED_DIM],
-                                 const int16_t vec[EMBED_DIM]) {
-  // 4-way partial sums shorten the adder dependency chain.
+static inline int32_t dot_i8_i16(
+    const int8_t weights[EMBED_DIM],
+    const int16_t vec[EMBED_DIM]) {
   int32_t acc0 = 0;
   int32_t acc1 = 0;
   int32_t acc2 = 0;
@@ -147,33 +143,20 @@ component void microgpt_step(stream_in<StepInputs> &in_stream,
   int16_t best_logit = (int16_t)0x8000;
   int16_t second_logit = (int16_t)0x8000;
 
-  // Tile logits and top-2 update together to remove an extra full reduction pass.
 #pragma ii 1
-  for (int row_base = 0; row_base < VOCAB_SIZE; row_base += LOGIT_TILE_ROWS) {
-    int16_t logit_tile[LOGIT_TILE_ROWS];
+  for (int row = 0; row < VOCAB_SIZE; ++row) {
+    int32_t acc = dot_i8_i16(g_lm_q[row], x_vec);
+    int16_t logit = scale_q16(acc, g_lm_scale_q16[row]);
+    logits[row] = logit;
 
-#pragma unroll
-    for (int t = 0; t < LOGIT_TILE_ROWS; ++t) {
-      int row = row_base + t;
-      int32_t acc = dot_i8_i16(g_lm_q[row], x_vec);
-      int16_t logit = scale_q16(acc, g_lm_scale_q16[row]);
-      logits[row] = logit;
-      logit_tile[t] = logit;
-    }
-
-#pragma unroll
-    for (int t = 0; t < LOGIT_TILE_ROWS; ++t) {
-      int row = row_base + t;
-      int16_t logit = logit_tile[t];
-      if (logit > best_logit) {
-        second_logit = best_logit;
-        second_idx = best_idx;
-        best_logit = logit;
-        best_idx = row;
-      } else if (logit > second_logit) {
-        second_logit = logit;
-        second_idx = row;
-      }
+    if (logit > best_logit) {
+      second_logit = best_logit;
+      second_idx = best_idx;
+      best_logit = logit;
+      best_idx = row;
+    } else if (logit > second_logit) {
+      second_logit = logit;
+      second_idx = row;
     }
   }
 
