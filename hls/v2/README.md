@@ -34,6 +34,8 @@ python .\hls\v2\tools\hls_kernel_sim.py --dot-lanes 4 --hidden-row-par 2 --logit
 
 This simulator matches the active HLS kernel in `src\microgpt_step.cpp`, not the larger reference model in `tools\reference_microgpt.py`. Use it to sweep matvec parallelism before paying the HLS + Quartus compile time.
 
+The current conservative synthesis target is `DOT_LANES=4`, `HIDDEN_ROW_PAR=2`, `LOGIT_ROW_PAR=2`, which the cycle model estimates at about `526k tok/s` on a `50 MHz` fabric clock. The next more aggressive step to try after that is `LOGIT_ROW_PAR=3`, which projects about `667k tok/s` if timing and resource use still close.
+
 ## Host interface
 
 - `--count`: number of names to generate

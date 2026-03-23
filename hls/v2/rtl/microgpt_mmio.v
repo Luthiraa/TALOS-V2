@@ -23,9 +23,7 @@ module microgpt_mmio (
 
 localparam [7:0] BOS_TOKEN = 8'd26;
 localparam [3:0] ST_IDLE = 4'd0;
-localparam [3:0] ST_START = 4'd1;
-localparam [3:0] ST_WAIT = 4'd2;
-localparam [3:0] ST_EVAL = 4'd3;
+localparam [3:0] ST_WAIT = 4'd1;
 
 reg [7:0] prompt_mem [0:15];
 reg [7:0] output_mem [0:15];
@@ -251,55 +249,48 @@ always @(posedge clk) begin
                             error_reg <= 1'b1;
                         end else begin
                             running_reg <= 1'b1;
-                            state_reg <= ST_START;
+                            step_start_reg <= 1'b1;
+                            state_reg <= ST_WAIT;
                         end
                         start_req <= 1'b0;
                     end
                 end
 
-                ST_START: begin
-                    step_start_reg <= 1'b1;
-                    state_reg <= ST_WAIT;
-                end
-
                 ST_WAIT: begin
                     if (step_done) begin
-                        state_reg <= ST_EVAL;
-                    end
-                end
+                        last_sampled_token_reg <= step_next_token;
+                        last_argmax_token_reg <= step_argmax_token;
+                        last_top1_logit_reg <= step_top1_logit;
+                        last_top2_token_reg <= step_top2_token;
+                        last_top2_logit_reg <= step_top2_logit;
+                        logits_mem[0] <= step_logits_pack0;
+                        logits_mem[1] <= step_logits_pack1;
+                        logits_mem[2] <= step_logits_pack2;
+                        logits_mem[3] <= step_logits_pack3;
+                        logits_mem[4] <= step_logits_pack4;
+                        logits_mem[5] <= step_logits_pack5;
+                        logits_mem[6] <= step_logits_pack6;
+                        rng_state_reg <= step_rng_state;
+                        step_clear_reg <= 1'b0;
 
-                ST_EVAL: begin
-                    last_sampled_token_reg <= step_next_token;
-                    last_argmax_token_reg <= step_argmax_token;
-                    last_top1_logit_reg <= step_top1_logit;
-                    last_top2_token_reg <= step_top2_token;
-                    last_top2_logit_reg <= step_top2_logit;
-                    logits_mem[0] <= step_logits_pack0;
-                    logits_mem[1] <= step_logits_pack1;
-                    logits_mem[2] <= step_logits_pack2;
-                    logits_mem[3] <= step_logits_pack3;
-                    logits_mem[4] <= step_logits_pack4;
-                    logits_mem[5] <= step_logits_pack5;
-                    logits_mem[6] <= step_logits_pack6;
-                    rng_state_reg <= step_rng_state;
-                    step_clear_reg <= 1'b0;
-
-                    if ((step_next_token == BOS_TOKEN) || (gen_count_reg >= max_gen_reg) || (current_pos_reg == 8'd15)) begin
-                        running_reg <= 1'b0;
-                        done_reg <= 1'b1;
-                        state_reg <= ST_IDLE;
-                    end else begin
-                        output_mem[out_len_reg] <= step_next_token;
-                        out_len_reg <= out_len_reg + 8'd1;
-                        gen_count_reg <= gen_count_reg + 8'd1;
-                        if ((gen_count_reg + 8'd1 >= max_gen_reg) || (current_pos_reg == 8'd15)) begin
+                        if ((step_next_token == BOS_TOKEN) || (gen_count_reg >= max_gen_reg) || (current_pos_reg == 8'd15)) begin
                             running_reg <= 1'b0;
                             done_reg <= 1'b1;
                             state_reg <= ST_IDLE;
                         end else begin
+                            output_mem[out_len_reg] <= step_next_token;
+                            out_len_reg <= out_len_reg + 8'd1;
+                            gen_count_reg <= gen_count_reg + 8'd1;
                             step_token_reg <= step_next_token;
                             current_pos_reg <= current_pos_reg + 8'd1;
-                            state_reg <= ST_START;
+                            if ((gen_count_reg + 8'd1 >= max_gen_reg) || (current_pos_reg == 8'd15)) begin
+                                running_reg <= 1'b0;
+                                done_reg <= 1'b1;
+                                state_reg <= ST_IDLE;
+                            end else begin
+                                step_start_reg <= 1'b1;
+                                state_reg <= ST_WAIT;
+                            end
                         end
                     end
                 end

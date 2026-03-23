@@ -277,22 +277,23 @@ def main() -> None:
 
     print("")
     print("Sweep around current settings")
-    for dot_lanes in (2, 4, 8, 16):
-        for logit_row_par in (1, 2, 3, 4):
-            sweep = estimate_cycles(
-                dot_lanes,
-                args.hidden_row_par,
-                logit_row_par,
-                args.x_par,
-                args.finish_overhead,
-                args.clock_hz,
-            )
-            marker = "*" if sweep.tok_per_sec >= args.target_tps else " "
-            print(
-                f"{marker} dot={dot_lanes:2d} hidden_par={args.hidden_row_par:2d} "
-                f"logit_par={logit_row_par:2d} cycles={sweep.total_cycles:3d} "
-                f"tps={sweep.tok_per_sec:9.2f}"
-            )
+    for hidden_row_par in (1, 2, 4):
+        for dot_lanes in (2, 4, 8, 16):
+            for logit_row_par in (1, 2, 3, 4):
+                sweep = estimate_cycles(
+                    dot_lanes,
+                    hidden_row_par,
+                    logit_row_par,
+                    args.x_par,
+                    args.finish_overhead,
+                    args.clock_hz,
+                )
+                marker = "*" if sweep.tok_per_sec >= args.target_tps else " "
+                print(
+                    f"{marker} dot={dot_lanes:2d} hidden_par={hidden_row_par:2d} "
+                    f"logit_par={logit_row_par:2d} cycles={sweep.total_cycles:3d} "
+                    f"tps={sweep.tok_per_sec:9.2f}"
+                )
 
 
 if __name__ == "__main__":

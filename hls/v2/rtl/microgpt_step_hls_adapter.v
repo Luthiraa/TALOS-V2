@@ -28,15 +28,15 @@ module microgpt_step_hls_adapter (
 
 wire         hls_busy;
 wire [79:0]  hls_in_stream_data;
+wire [79:0]  hls_in_stream_data_mux;
 wire         hls_in_stream_ready;
 wire [535:0] hls_out_stream_data;
 wire         hls_out_stream_valid;
 wire         hls_out_stream_ready;
+wire         launch_req;
 reg          start_pending;
 reg  [79:0]  hls_in_stream_data_reg;
-reg          hls_in_stream_valid_reg;
 reg          hls_out_stream_ready_reg;
-reg          hls_start_reg;
 reg          hls_stall_reg;
 reg          hls_in_stream_ready_reg;
 reg  [535:0] hls_out_stream_data_reg;
@@ -44,7 +44,8 @@ reg          hls_out_stream_valid_reg;
 reg          hls_busy_reg;
 reg  [2:0]   sync_resetn;
 
-assign busy = hls_busy_reg | start_pending;
+assign launch_req = start | start_pending;
+assign busy = hls_busy_reg | launch_req;
 assign hls_in_stream_data = {
     rng_state_in,
     temperature_q8_8,
@@ -53,6 +54,7 @@ assign hls_in_stream_data = {
     pos_in,
     token_in
 };
+assign hls_in_stream_data_mux = start_pending ? hls_in_stream_data_reg : hls_in_stream_data;
 assign hls_out_stream_ready = 1'b1;
 
 always @(posedge clock or negedge resetn) begin
@@ -61,9 +63,7 @@ always @(posedge clock or negedge resetn) begin
         done <= 1'b0;
         start_pending <= 1'b0;
         hls_in_stream_data_reg <= 80'd0;
-        hls_in_stream_valid_reg <= 1'b0;
         hls_out_stream_ready_reg <= 1'b0;
-        hls_start_reg <= 1'b0;
         hls_stall_reg <= 1'b0;
         hls_in_stream_ready_reg <= 1'b0;
         hls_out_stream_data_reg <= 536'd0;
@@ -91,9 +91,7 @@ always @(posedge clock or negedge resetn) begin
             hls_in_stream_data_reg <= hls_in_stream_data;
         end
 
-        hls_in_stream_valid_reg <= start_pending;
-        hls_start_reg <= start_pending;
-        if (start_pending && hls_in_stream_ready) begin
+        if (launch_req && hls_in_stream_ready) begin
             start_pending <= 1'b0;
         end
 
@@ -124,12 +122,12 @@ always @(posedge clock or negedge resetn) begin
 end
 
 microgpt_step_internal microgpt_step_hls_inst (
-    .start(hls_start_reg),
+    .start(launch_req),
     .busy(hls_busy),
     .clock(clock),
-    .in_stream_data(hls_in_stream_data_reg),
+    .in_stream_data(hls_in_stream_data_mux),
     .in_stream_ready(hls_in_stream_ready),
-    .in_stream_valid(hls_in_stream_valid_reg),
+    .in_stream_valid(launch_req),
     .out_stream_data(hls_out_stream_data),
     .out_stream_ready(hls_out_stream_ready_reg),
     .out_stream_valid(hls_out_stream_valid),

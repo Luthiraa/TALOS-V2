@@ -11,6 +11,8 @@ static const int VOCAB_SIZE = 27;
 static const int DOT_LANES = 4;
 static const int HIDDEN_ROW_PAR = 1;
 static const int LOGIT_ROW_PAR = 2;
+static const int LOGIT_SLOTS =
+    ((VOCAB_SIZE + LOGIT_ROW_PAR - 1) / LOGIT_ROW_PAR) * LOGIT_ROW_PAR;
 struct __attribute__((packed)) StepInputs {
   uint8_t token_in;
   uint8_t pos_in;
@@ -100,7 +102,7 @@ static inline int32_t dot_i8_i16(
   return sum;
 }
 
-static uint64_t pack4(const int16_t logits[VOCAB_SIZE], int base) {
+static uint64_t pack4(const int16_t logits[LOGIT_SLOTS], int base) {
   uint64_t word = 0;
 #pragma unroll
   for (int i = 0; i < 4; ++i) {
@@ -127,7 +129,7 @@ component void microgpt_step(stream_in<StepInputs> &in_stream,
 
   int16_t x_vec[EMBED_DIM];
   int16_t hidden_next[EMBED_DIM];
-  int16_t logits[VOCAB_SIZE];
+  int16_t logits[LOGIT_SLOTS];
 
 #pragma unroll
   for (int i = 0; i < EMBED_DIM; ++i) {
@@ -172,6 +174,8 @@ component void microgpt_step(stream_in<StepInputs> &in_stream,
           second_logit = logit;
           second_idx = row;
         }
+      } else {
+        logits[row] = (int16_t)0x8000;
       }
     }
   }
