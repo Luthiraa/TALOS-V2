@@ -25,6 +25,15 @@ Example options:
 .\run_inference.bat --count 10 --steps 15 --temperature 0.5 --verbose
 ```
 
+Offline kernel simulation and throughput estimation:
+
+```powershell
+python .\hls\v2\tools\hls_kernel_sim.py --count 20 --steps 15 --temperature 0.5
+python .\hls\v2\tools\hls_kernel_sim.py --dot-lanes 4 --hidden-row-par 2 --logit-row-par 2
+```
+
+This simulator matches the active HLS kernel in `src\microgpt_step.cpp`, not the larger reference model in `tools\reference_microgpt.py`. Use it to sweep matvec parallelism before paying the HLS + Quartus compile time.
+
 ## Host interface
 
 - `--count`: number of names to generate

@@ -8,7 +8,9 @@ using namespace ihc;
 
 static const int EMBED_DIM = 16;
 static const int VOCAB_SIZE = 27;
-static const int HIDDEN_TILE_ROWS = 2;
+static const int DOT_LANES = 4;
+static const int HIDDEN_ROW_PAR = 1;
+static const int LOGIT_ROW_PAR = 2;
 struct __attribute__((packed)) StepInputs {
   uint8_t token_in;
   uint8_t pos_in;
@@ -76,18 +78,26 @@ static uint16_t exp_weight_from_delta(int32_t delta_q10) {
 static inline int32_t dot_i8_i16(
     const int8_t weights[EMBED_DIM],
     const int16_t vec[EMBED_DIM]) {
-  int32_t acc0 = 0;
-  int32_t acc1 = 0;
-  int32_t acc2 = 0;
-  int32_t acc3 = 0;
+  int32_t lane_acc[DOT_LANES];
 #pragma unroll
-  for (int col = 0; col < EMBED_DIM; col += 4) {
-    acc0 += (int32_t)weights[col + 0] * (int32_t)vec[col + 0];
-    acc1 += (int32_t)weights[col + 1] * (int32_t)vec[col + 1];
-    acc2 += (int32_t)weights[col + 2] * (int32_t)vec[col + 2];
-    acc3 += (int32_t)weights[col + 3] * (int32_t)vec[col + 3];
+  for (int lane = 0; lane < DOT_LANES; ++lane) {
+    lane_acc[lane] = 0;
   }
-  return (acc0 + acc1) + (acc2 + acc3);
+
+#pragma unroll
+  for (int col = 0; col < EMBED_DIM; col += DOT_LANES) {
+#pragma unroll
+    for (int lane = 0; lane < DOT_LANES; ++lane) {
+      lane_acc[lane] += (int32_t)weights[col + lane] * (int32_t)vec[col + lane];
+    }
+  }
+
+  int32_t sum = 0;
+#pragma unroll
+  for (int lane = 0; lane < DOT_LANES; ++lane) {
+    sum += lane_acc[lane];
+  }
+  return sum;
 }
 
 static uint64_t pack4(const int16_t logits[VOCAB_SIZE], int base) {
@@ -129,9 +139,9 @@ component void microgpt_step(stream_in<StepInputs> &in_stream,
   }
 
 #pragma ii 1
-  for (int row_base = 0; row_base < EMBED_DIM; row_base += HIDDEN_TILE_ROWS) {
+  for (int row_base = 0; row_base < EMBED_DIM; row_base += HIDDEN_ROW_PAR) {
 #pragma unroll
-    for (int t = 0; t < HIDDEN_TILE_ROWS; ++t) {
+    for (int t = 0; t < HIDDEN_ROW_PAR; ++t) {
       int row = row_base + t;
       int32_t acc = dot_i8_i16(g_wq_q[row], x_vec);
       hidden_next[row] = scale_q16(acc, g_wq_scale_q16[row]);
@@ -144,19 +154,25 @@ component void microgpt_step(stream_in<StepInputs> &in_stream,
   int16_t second_logit = (int16_t)0x8000;
 
 #pragma ii 1
-  for (int row = 0; row < VOCAB_SIZE; ++row) {
-    int32_t acc = dot_i8_i16(g_lm_q[row], x_vec);
-    int16_t logit = scale_q16(acc, g_lm_scale_q16[row]);
-    logits[row] = logit;
+  for (int row_base = 0; row_base < VOCAB_SIZE; row_base += LOGIT_ROW_PAR) {
+#pragma unroll
+    for (int t = 0; t < LOGIT_ROW_PAR; ++t) {
+      int row = row_base + t;
+      if (row < VOCAB_SIZE) {
+        int32_t acc = dot_i8_i16(g_lm_q[row], x_vec);
+        int16_t logit = scale_q16(acc, g_lm_scale_q16[row]);
+        logits[row] = logit;
 
-    if (logit > best_logit) {
-      second_logit = best_logit;
-      second_idx = best_idx;
-      best_logit = logit;
-      best_idx = row;
-    } else if (logit > second_logit) {
-      second_logit = logit;
-      second_idx = row;
+        if (logit > best_logit) {
+          second_logit = best_logit;
+          second_idx = best_idx;
+          best_logit = logit;
+          best_idx = row;
+        } else if (logit > second_logit) {
+          second_logit = logit;
+          second_idx = row;
+        }
+      }
     }
   }
 
