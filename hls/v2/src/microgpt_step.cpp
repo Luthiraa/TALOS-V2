@@ -29,13 +29,6 @@ struct __attribute__((packed)) StepOutputs {
   int16_t top1_logit_q11;
   uint8_t top2_token;
   int16_t top2_logit_q11;
-  uint64_t logits_pack0;
-  uint64_t logits_pack1;
-  uint64_t logits_pack2;
-  uint64_t logits_pack3;
-  uint64_t logits_pack4;
-  uint64_t logits_pack5;
-  uint64_t logits_pack6;
 };
 
 static uint32_t xorshift32(uint32_t value) {
@@ -80,37 +73,12 @@ static uint16_t exp_weight_from_delta(int32_t delta_q10) {
 static inline int32_t dot_i8_i16(
     const int8_t weights[EMBED_DIM],
     const int16_t vec[EMBED_DIM]) {
-  int32_t lane_acc[DOT_LANES];
+  int32_t acc = 0;
 #pragma unroll
-  for (int lane = 0; lane < DOT_LANES; ++lane) {
-    lane_acc[lane] = 0;
+  for (int col = 0; col < EMBED_DIM; ++col) {
+    acc += (int32_t)weights[col] * (int32_t)vec[col];
   }
-
-#pragma unroll
-  for (int col = 0; col < EMBED_DIM; col += DOT_LANES) {
-#pragma unroll
-    for (int lane = 0; lane < DOT_LANES; ++lane) {
-      lane_acc[lane] += (int32_t)weights[col + lane] * (int32_t)vec[col + lane];
-    }
-  }
-
-  int32_t sum = 0;
-#pragma unroll
-  for (int lane = 0; lane < DOT_LANES; ++lane) {
-    sum += lane_acc[lane];
-  }
-  return sum;
-}
-
-static uint64_t pack4(const int16_t logits[LOGIT_SLOTS], int base) {
-  uint64_t word = 0;
-#pragma unroll
-  for (int i = 0; i < 4; ++i) {
-    int idx = base + i;
-    uint16_t lane = (idx < VOCAB_SIZE) ? (uint16_t)logits[idx] : 0;
-    word |= ((uint64_t)lane) << (16 * i);
-  }
-  return word;
+  return acc;
 }
 
 hls_avalon_streaming_component
@@ -230,13 +198,5 @@ component void microgpt_step(stream_in<StepInputs> &in_stream,
   out.top1_logit_q11 = best_logit;
   out.top2_token = (uint8_t)second_idx;
   out.top2_logit_q11 = second_logit;
-
-  out.logits_pack0 = pack4(logits, 0);
-  out.logits_pack1 = pack4(logits, 4);
-  out.logits_pack2 = pack4(logits, 8);
-  out.logits_pack3 = pack4(logits, 12);
-  out.logits_pack4 = pack4(logits, 16);
-  out.logits_pack5 = pack4(logits, 20);
-  out.logits_pack6 = pack4(logits, 24);
   out_stream.write(out);
 }

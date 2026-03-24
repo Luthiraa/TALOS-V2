@@ -16,21 +16,14 @@ module microgpt_step_hls_adapter (
     output wire [31:0] rng_state_out,
     output wire signed [15:0] top1_logit_q11,
     output wire [7:0]  top2_token,
-    output wire signed [15:0] top2_logit_q11,
-    output wire [63:0] logits_pack0,
-    output wire [63:0] logits_pack1,
-    output wire [63:0] logits_pack2,
-    output wire [63:0] logits_pack3,
-    output wire [63:0] logits_pack4,
-    output wire [63:0] logits_pack5,
-    output wire [63:0] logits_pack6
+    output wire signed [15:0] top2_logit_q11
 );
 
 wire         hls_busy;
 wire [79:0]  hls_in_stream_data;
 wire [79:0]  hls_in_stream_data_mux;
 wire         hls_in_stream_ready;
-wire [535:0] hls_out_stream_data;
+wire [87:0]  hls_out_stream_data;
 wire         hls_out_stream_valid;
 wire         hls_out_stream_ready;
 wire         launch_req;
@@ -47,13 +40,6 @@ reg  [31:0]  rng_state_out_reg;
 reg  signed [15:0] top1_logit_q11_reg;
 reg  [7:0]   top2_token_reg;
 reg  signed [15:0] top2_logit_q11_reg;
-reg  [63:0]  logits_pack0_reg;
-reg  [63:0]  logits_pack1_reg;
-reg  [63:0]  logits_pack2_reg;
-reg  [63:0]  logits_pack3_reg;
-reg  [63:0]  logits_pack4_reg;
-reg  [63:0]  logits_pack5_reg;
-reg  [63:0]  logits_pack6_reg;
 
 assign launch_req = start | start_pending;
 assign busy = hls_busy_reg | launch_req;
@@ -74,13 +60,6 @@ assign rng_state_out = hls_out_stream_valid ? hls_out_stream_data[47:16] : rng_s
 assign top1_logit_q11 = hls_out_stream_valid ? hls_out_stream_data[63:48] : top1_logit_q11_reg;
 assign top2_token = hls_out_stream_valid ? hls_out_stream_data[71:64] : top2_token_reg;
 assign top2_logit_q11 = hls_out_stream_valid ? hls_out_stream_data[87:72] : top2_logit_q11_reg;
-assign logits_pack0 = hls_out_stream_valid ? hls_out_stream_data[151:88] : logits_pack0_reg;
-assign logits_pack1 = hls_out_stream_valid ? hls_out_stream_data[215:152] : logits_pack1_reg;
-assign logits_pack2 = hls_out_stream_valid ? hls_out_stream_data[279:216] : logits_pack2_reg;
-assign logits_pack3 = hls_out_stream_valid ? hls_out_stream_data[343:280] : logits_pack3_reg;
-assign logits_pack4 = hls_out_stream_valid ? hls_out_stream_data[407:344] : logits_pack4_reg;
-assign logits_pack5 = hls_out_stream_valid ? hls_out_stream_data[471:408] : logits_pack5_reg;
-assign logits_pack6 = hls_out_stream_valid ? hls_out_stream_data[535:472] : logits_pack6_reg;
 
 always @(posedge clock or negedge resetn) begin
     if (!resetn) begin
@@ -97,13 +76,6 @@ always @(posedge clock or negedge resetn) begin
         top1_logit_q11_reg <= 16'sd0;
         top2_token_reg <= 8'd0;
         top2_logit_q11_reg <= 16'sd0;
-        logits_pack0_reg <= 64'd0;
-        logits_pack1_reg <= 64'd0;
-        logits_pack2_reg <= 64'd0;
-        logits_pack3_reg <= 64'd0;
-        logits_pack4_reg <= 64'd0;
-        logits_pack5_reg <= 64'd0;
-        logits_pack6_reg <= 64'd0;
     end else begin
         sync_resetn <= {sync_resetn[1:0], 1'b1};
 
@@ -128,13 +100,6 @@ always @(posedge clock or negedge resetn) begin
             top1_logit_q11_reg <= hls_out_stream_data[63:48];
             top2_token_reg <= hls_out_stream_data[71:64];
             top2_logit_q11_reg <= hls_out_stream_data[87:72];
-            logits_pack0_reg <= hls_out_stream_data[151:88];
-            logits_pack1_reg <= hls_out_stream_data[215:152];
-            logits_pack2_reg <= hls_out_stream_data[279:216];
-            logits_pack3_reg <= hls_out_stream_data[343:280];
-            logits_pack4_reg <= hls_out_stream_data[407:344];
-            logits_pack5_reg <= hls_out_stream_data[471:408];
-            logits_pack6_reg <= hls_out_stream_data[535:472];
         end
     end
 end

@@ -8,7 +8,7 @@ set_project_property DEVICE_FAMILY {Cyclone V}
 set_project_property DEVICE {5CSEMA5F31C6}
 
 add_instance clk_0 clock_source
-set_instance_parameter_value clk_0 {clockFrequency} {50000000.0}
+set_instance_parameter_value clk_0 {clockFrequency} {60000000.0}
 set_instance_parameter_value clk_0 {clockFrequencyKnown} {1}
 set_instance_parameter_value clk_0 {resetSynchronousEdges} {DEASSERT}
 

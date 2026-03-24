@@ -27,8 +27,6 @@ localparam [3:0] ST_WAIT = 4'd1;
 
 reg [7:0] prompt_mem [0:15];
 reg [7:0] output_mem [0:15];
-reg [63:0] logits_mem [0:6];
-
 reg [7:0] prompt_len_reg = 8'd0;
 reg [7:0] max_gen_reg = 8'd8;
 reg [15:0] temperature_reg = 16'h0100;
@@ -71,14 +69,6 @@ wire [31:0] step_rng_state;
 wire signed [15:0] step_top1_logit;
 wire [7:0] step_top2_token;
 wire signed [15:0] step_top2_logit;
-wire [63:0] step_logits_pack0;
-wire [63:0] step_logits_pack1;
-wire [63:0] step_logits_pack2;
-wire [63:0] step_logits_pack3;
-wire [63:0] step_logits_pack4;
-wire [63:0] step_logits_pack5;
-wire [63:0] step_logits_pack6;
-
 assign avs_waitrequest = 1'b0;
 assign led_idle = !running_reg;
 assign led_busy = running_reg;
@@ -107,14 +97,7 @@ microgpt_step_hls_adapter microgpt_step_inst (
     .rng_state_out(step_rng_state),
     .top1_logit_q11(step_top1_logit),
     .top2_token(step_top2_token),
-    .top2_logit_q11(step_top2_logit),
-    .logits_pack0(step_logits_pack0),
-    .logits_pack1(step_logits_pack1),
-    .logits_pack2(step_logits_pack2),
-    .logits_pack3(step_logits_pack3),
-    .logits_pack4(step_logits_pack4),
-    .logits_pack5(step_logits_pack5),
-    .logits_pack6(step_logits_pack6)
+    .top2_logit_q11(step_top2_logit)
 );
 
 integer idx;
@@ -155,9 +138,6 @@ always @(posedge clk) begin
         for (idx = 0; idx < 16; idx = idx + 1) begin
             prompt_mem[idx] <= 8'd0;
             output_mem[idx] <= 8'd0;
-        end
-        for (idx = 0; idx < 7; idx = idx + 1) begin
-            logits_mem[idx] <= 64'd0;
         end
     end else begin
         step_start_reg <= 1'b0;
@@ -263,13 +243,6 @@ always @(posedge clk) begin
                         last_top1_logit_reg <= step_top1_logit;
                         last_top2_token_reg <= step_top2_token;
                         last_top2_logit_reg <= step_top2_logit;
-                        logits_mem[0] <= step_logits_pack0;
-                        logits_mem[1] <= step_logits_pack1;
-                        logits_mem[2] <= step_logits_pack2;
-                        logits_mem[3] <= step_logits_pack3;
-                        logits_mem[4] <= step_logits_pack4;
-                        logits_mem[5] <= step_logits_pack5;
-                        logits_mem[6] <= step_logits_pack6;
                         rng_state_reg <= step_rng_state;
                         step_clear_reg <= 1'b0;
 
@@ -333,23 +306,7 @@ always @(*) begin
             end else if ((avs_address[9:2] >= 6'h18) && (avs_address[9:2] < 6'h28)) begin
                 read_data_comb = {24'd0, output_mem[avs_address[5:2] - 4'h8]};
             end else if ((avs_address[9:2] >= 6'h28) && (avs_address[9:2] < 6'h36)) begin
-                case (avs_address[9:2] - 6'h28)
-                    4'd0: read_data_comb = logits_mem[0][31:0];
-                    4'd1: read_data_comb = logits_mem[0][63:32];
-                    4'd2: read_data_comb = logits_mem[1][31:0];
-                    4'd3: read_data_comb = logits_mem[1][63:32];
-                    4'd4: read_data_comb = logits_mem[2][31:0];
-                    4'd5: read_data_comb = logits_mem[2][63:32];
-                    4'd6: read_data_comb = logits_mem[3][31:0];
-                    4'd7: read_data_comb = logits_mem[3][63:32];
-                    4'd8: read_data_comb = logits_mem[4][31:0];
-                    4'd9: read_data_comb = logits_mem[4][63:32];
-                    4'd10: read_data_comb = logits_mem[5][31:0];
-                    4'd11: read_data_comb = logits_mem[5][63:32];
-                    4'd12: read_data_comb = logits_mem[6][31:0];
-                    4'd13: read_data_comb = logits_mem[6][63:32];
-                    default: read_data_comb = 32'd0;
-                endcase
+                read_data_comb = 32'd0;
             end
         end
     endcase

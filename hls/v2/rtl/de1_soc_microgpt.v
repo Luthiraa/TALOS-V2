@@ -12,7 +12,8 @@ module de1_soc_microgpt (
 );
 
 reg [3:0] reset_pipe = 4'b0000;
-wire sys_clk = CLOCK_50;
+wire sys_clk;
+wire pll_locked;
 wire resetn = reset_pipe[3];
 
 wire [31:0] jtag_master_address;
@@ -33,8 +34,19 @@ wire [7:0] dbg_out_len;
 wire [7:0] dbg_last_token;
 wire [3:0] dbg_state;
 
-always @(posedge sys_clk) begin
-    reset_pipe <= {reset_pipe[2:0], 1'b1};
+sys_pll sys_pll_inst (
+    .inclk0(CLOCK_50),
+    .areset(1'b0),
+    .c0(sys_clk),
+    .locked(pll_locked)
+);
+
+always @(posedge sys_clk or negedge pll_locked) begin
+    if (!pll_locked) begin
+        reset_pipe <= 4'b0000;
+    end else begin
+        reset_pipe <= {reset_pipe[2:0], 1'b1};
+    end
 end
 
 jtag_microgpt_bridge jtag_bridge_inst (
