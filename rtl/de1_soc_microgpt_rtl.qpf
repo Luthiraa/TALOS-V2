@@ -1,0 +1,2 @@
+QUARTUS_VERSION = "18.1"
+PROJECT_REVISION = "de1_soc_microgpt_rtl"
