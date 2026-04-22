@@ -22,6 +22,20 @@ The Quartus project compiled successfully and produced:
 rtl/de1_soc_microgpt_rtl.sof
 ```
 
+The current RTL top level also includes the JTAG-to-Avalon bridge from:
+
+```text
+hls/v2/jtag_microgpt_bridge/synthesis/jtag_microgpt_bridge.qip
+```
+
+The host-side RTL JTAG runner is:
+
+```text
+rtl/run_jtag_inference.bat
+rtl/host/jtag_rtl_infer.py
+rtl/host/system_console_rtl_infer.tcl
+```
+
 ## Important Caveat
 
 This is not a bit-exact replica of Karpathy's Python `microgpt.py`.
@@ -86,18 +100,36 @@ n_layer    = 1
 mlp_dim    = 64
 ```
 
+## Compute Structure
+
+The active microgpt core uses direct matrix-vector dot products inside the core FSM. It is not a systolic array.
+
+Projection stages walk rows and columns with one accumulator:
+
+- `ST_Q_LINEAR`: query projection
+- `ST_K_LINEAR`: key projection
+- `ST_V_LINEAR`: value projection
+- `ST_ATTN_WO`: attention output projection
+- `ST_FC1`: MLP first projection
+- `ST_FC2`: MLP second projection
+- `ST_LM_HEAD`: final logits projection
+
+The `matrixmul_unit.sv` and `processing_element.sv` files are separate matrix-multiply test hardware. They are not instantiated by the active `de1_soc_microgpt_rtl.sv` top level.
+
 ## Board Controls
 
 - `SW0`: enable
 - `SW1`: reset, active high
-- `KEY0`: start or restart generation
+- JTAG host control register: start or restart generation
+
+`KEY0` and `KEY1` are no longer used by the active RTL top level.
 
 ## LEDs
 
 - `LEDR0`: ready while enabled and idle
 - `LEDR1`: busy while generating
 - `LEDR2`: generation done
-- `LEDR3`: one-cycle core done pulse
+- `LEDR3`: host JTAG activity
 - `LEDR4`: reset deasserted
 - `LEDR5`: enable switch state
 - `LEDR6`: busy blink
@@ -142,6 +174,14 @@ Build and program:
 .\run_de1soc.bat
 ```
 
+Run inference over JTAG:
+
+```bat
+.\run_jtag_inference.bat --steps 15 --temperature 0.5 --seed 2 --stream
+```
+
+The generated name appears first as plain text and again in the packet summary as `output_text=...`.
+
 ## Latest Build Result
 
 The trained-weight RTL build completed successfully with Quartus Prime 18.1 Lite.
@@ -150,9 +190,12 @@ Fit summary:
 
 ```text
 Device: 5CSEMA5F31C6
-Logic utilization: about 40% ALMs
-DSP blocks: 11 / 87
-Timing: closed on CLOCK_50_IN and divided CORE_CLK
+Logic utilization: 15,091 / 32,070 ALMs (47%)
+Registers: 13,305
+Pins: 55 / 457
+Block memory bits: 512 / 4,065,280
+DSP blocks: 13 / 87
+Timing: positive setup/hold slack reported for CLOCK_50_IN, CORE_CLK, and altera_reserved_tck in the latest run
 ```
 
 The design uses a divided core clock:
@@ -163,3 +206,61 @@ CORE_CLK = CLOCK_50 / 128
 
 This is intentionally slow, but it allows the current hardware implementation to meet timing.
 
+## Verification Added
+
+Two verification helpers were added:
+
+```text
+rtl/tools/karpathy_exact_reference.py
+rtl/tb_microgpt_core.sv
+```
+
+The exact Python reference command:
+
+```bat
+python .\tools\karpathy_exact_reference.py --count 20 --temperature 0.5
+```
+
+This reproduces the Karpathy-style trained-weight output:
+
+```text
+sample  1: kamon
+sample  2: ann
+sample  3: karai
+```
+
+The ModelSim deterministic RTL test compiles and runs with:
+
+```bat
+vlib work_microgpt_core
+vlog -nolock -sv -work work_microgpt_core microgpt_exact_core.sv tb_microgpt_core.sv
+vsim -c work_microgpt_core.tb_microgpt_core -do "run -all; quit -f"
+```
+
+Observed result:
+
+```text
+RTL deterministic output tokens: 12
+Karpathy exact first sample tokens are 10 0 12 14 13 26 (kamon).
+PASS: RTL core is deterministic for repeated seed/config.
+```
+
+This means the current RTL is deterministic, but it is not exact to Karpathy Python. Exact matching would require changing the arithmetic and sampler behavior, not the transformer topology.
+
+## JTAG/MMIO Changes
+
+The RTL top-level JTAG register path currently provides:
+
+- ID register: `0x4D475254`
+- version register: `0x00020000`
+- control register bits for host start and host clear
+- configuration register for max generation length and temperature
+- seed register
+- status register with ready, busy, done, error, host activity, output length, and position
+- output token memory window at `0x60`
+- performance cycle and token-rate counters
+
+Two bridge-facing bugs were fixed:
+
+- status register packing is now 32 bits, so the host decodes `out_len` correctly
+- output token reads now index `output_mem` with the full Avalon word address offset

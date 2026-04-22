@@ -5,14 +5,11 @@ set_global_assignment -name TOP_LEVEL_ENTITY de1_soc_microgpt_rtl
 set_global_assignment -name SYSTEMVERILOG_FILE de1_soc_microgpt_rtl.sv
 set_global_assignment -name SYSTEMVERILOG_FILE microgpt_exact_core.sv
 set_global_assignment -name SDC_FILE de1_soc_microgpt_rtl.sdc
+set_global_assignment -name QIP_FILE ../hls/v2/jtag_microgpt_bridge/synthesis/jtag_microgpt_bridge.qip
+set_global_assignment -name FITTER_EFFORT "FAST FIT"
 
 set_location_assignment PIN_AF14 -to CLOCK_50
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to CLOCK_50
-
-set_location_assignment PIN_AA14 -to KEY[0]
-set_location_assignment PIN_AA15 -to KEY[1]
-set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to KEY[0]
-set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to KEY[1]
 
 set_location_assignment PIN_AB12 -to SW[0]
 set_location_assignment PIN_AC12 -to SW[1]

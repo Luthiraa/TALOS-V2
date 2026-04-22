@@ -1,6 +1,5 @@
 module de1_soc_microgpt_rtl (
     input  wire       CLOCK_50,
-    input  wire [1:0] KEY,
     input  wire [1:0] SW,
     output wire [9:0] LEDR,
     output wire [6:0] HEX0,
@@ -15,23 +14,54 @@ localparam [7:0] BOS_TOKEN = 8'd26;
 localparam [2:0] ST_READY = 3'd0;
 localparam [2:0] ST_WAIT_CORE = 3'd1;
 localparam [2:0] ST_DONE = 3'd2;
+localparam [31:0] CORE_CLOCK_HZ = 32'd390625;
 
-reg [6:0] clkdiv;
+reg [6:0] clkdiv = 7'd0;
 wire clk = clkdiv[6];
 wire resetn = ~SW[1];
 wire enable = SW[0];
 
-reg [2:0] state_reg;
-reg [7:0] token_reg;
-reg [7:0] pos_reg;
-reg [7:0] out_len_reg;
-reg [31:0] rng_reg;
-reg start_core_reg;
-reg clear_cache_reg;
-reg key0_prev;
-reg done_latched_reg;
-reg [7:0] last_token_reg;
-reg [15:0] cycle_blink_reg;
+reg [2:0] state_reg = ST_READY;
+reg [7:0] token_reg = BOS_TOKEN;
+reg [7:0] pos_reg = 8'd0;
+reg [7:0] out_len_reg = 8'd0;
+reg [31:0] rng_reg = 32'h00000001;
+reg [15:0] temperature_reg = 16'h0080;
+reg [7:0] max_gen_reg = 8'd15;
+reg start_core_reg = 1'b0;
+reg clear_cache_reg = 1'b0;
+reg done_latched_reg = 1'b0;
+reg [7:0] last_token_reg = 8'd0;
+reg [15:0] cycle_blink_reg = 16'd0;
+reg [7:0] output_mem [0:15];
+reg [31:0] perf_cycles_reg = 32'd0;
+reg [31:0] tokens_per_sec_reg = 32'd0;
+reg host_toggle_reg = 1'b0;
+reg error_reg = 1'b0;
+reg host_start_req = 1'b0;
+reg host_clear_req = 1'b0;
+reg read_pending_reg = 1'b0;
+reg host_run_reg = 1'b0;
+reg host_start_toggle_50 = 1'b0;
+reg host_clear_toggle_50 = 1'b0;
+reg [31:0] host_seed_reg = 32'h00000001;
+reg [15:0] host_temperature_reg = 16'h0080;
+reg [7:0] host_max_gen_reg = 8'd15;
+reg start_sync0 = 1'b0;
+reg start_sync1 = 1'b0;
+reg start_seen_reg = 1'b0;
+reg clear_sync0 = 1'b0;
+reg clear_sync1 = 1'b0;
+reg clear_seen_reg = 1'b0;
+
+wire [31:0] jtag_master_address;
+wire        jtag_master_read;
+reg  [31:0] jtag_master_readdata = 32'd0;
+wire        jtag_master_write;
+wire [31:0] jtag_master_writedata;
+wire        jtag_master_waitrequest;
+reg         jtag_master_readdatavalid = 1'b0;
+wire [3:0]  jtag_master_byteenable;
 
 wire core_busy;
 wire core_done;
@@ -40,11 +70,59 @@ wire [7:0] core_argmax_token;
 wire [31:0] core_rng_state;
 wire signed [15:0] core_top_logit;
 
+integer out_i;
+
+assign jtag_master_waitrequest = 1'b0;
+
+jtag_microgpt_bridge jtag_bridge_inst (
+    .clk_clk(CLOCK_50),
+    .reset_reset_n(1'b1),
+    .master_address(jtag_master_address),
+    .master_readdata(jtag_master_readdata),
+    .master_read(jtag_master_read),
+    .master_write(jtag_master_write),
+    .master_writedata(jtag_master_writedata),
+    .master_waitrequest(jtag_master_waitrequest),
+    .master_readdatavalid(jtag_master_readdatavalid),
+    .master_byteenable(jtag_master_byteenable)
+);
+
 always @(posedge CLOCK_50) begin
-    if (!resetn)
-        clkdiv <= 7'd0;
-    else
-        clkdiv <= clkdiv + 7'd1;
+    clkdiv <= clkdiv + 7'd1;
+end
+
+always @(posedge CLOCK_50) begin
+    jtag_master_readdatavalid <= 1'b0;
+
+    if (read_pending_reg) begin
+        jtag_master_readdatavalid <= 1'b1;
+        read_pending_reg <= 1'b0;
+    end else if (jtag_master_read) begin
+        jtag_master_readdata <= read_data_comb;
+        read_pending_reg <= 1'b1;
+        host_toggle_reg <= ~host_toggle_reg;
+    end
+
+    if (jtag_master_write) begin
+        host_toggle_reg <= ~host_toggle_reg;
+        case (jtag_master_address[9:2])
+            6'h02: begin
+                if (jtag_master_writedata[0])
+                    host_start_toggle_50 <= ~host_start_toggle_50;
+                if (jtag_master_writedata[1])
+                    host_clear_toggle_50 <= ~host_clear_toggle_50;
+            end
+            6'h04: begin
+                host_max_gen_reg <= jtag_master_writedata[15:8];
+                host_temperature_reg <= jtag_master_writedata[31:16];
+            end
+            6'h05: begin
+                host_seed_reg <= jtag_master_writedata;
+            end
+            default: begin
+            end
+        endcase
+    end
 end
 
 microgpt_exact_core core_inst (
@@ -53,7 +131,7 @@ microgpt_exact_core core_inst (
     .start(start_core_reg),
     .clear_cache(clear_cache_reg),
     .sample_mode(1'b1),
-    .temperature_q8_8(16'h0080),
+    .temperature_q8_8(temperature_reg),
     .rng_state_in(rng_reg),
     .token_in(token_reg),
     .pos_in(pos_reg),
@@ -71,40 +149,103 @@ always @(posedge clk) begin
         token_reg <= BOS_TOKEN;
         pos_reg <= 8'd0;
         out_len_reg <= 8'd0;
-        rng_reg <= 32'h00000001;
+        rng_reg <= host_seed_reg;
+        temperature_reg <= host_temperature_reg;
+        max_gen_reg <= host_max_gen_reg;
         start_core_reg <= 1'b0;
         clear_cache_reg <= 1'b0;
-        key0_prev <= 1'b1;
         done_latched_reg <= 1'b0;
         last_token_reg <= 8'd0;
         cycle_blink_reg <= 16'd0;
+        perf_cycles_reg <= 32'd0;
+        tokens_per_sec_reg <= 32'd0;
+        error_reg <= 1'b0;
+        host_start_req <= 1'b0;
+        host_clear_req <= 1'b0;
+        host_run_reg <= 1'b0;
+        start_sync0 <= host_start_toggle_50;
+        start_sync1 <= host_start_toggle_50;
+        start_seen_reg <= host_start_toggle_50;
+        clear_sync0 <= host_clear_toggle_50;
+        clear_sync1 <= host_clear_toggle_50;
+        clear_seen_reg <= host_clear_toggle_50;
+        for (out_i = 0; out_i < 16; out_i = out_i + 1) begin
+            output_mem[out_i] <= 8'd0;
+        end
     end else begin
         start_core_reg <= 1'b0;
         clear_cache_reg <= 1'b0;
-        key0_prev <= KEY[0];
         cycle_blink_reg <= cycle_blink_reg + 16'd1;
 
-        if (!enable) begin
+        start_sync0 <= host_start_toggle_50;
+        start_sync1 <= start_sync0;
+        clear_sync0 <= host_clear_toggle_50;
+        clear_sync1 <= clear_sync0;
+
+        if (start_sync1 != start_seen_reg) begin
+            host_start_req <= 1'b1;
+            host_run_reg <= 1'b1;
+            start_seen_reg <= start_sync1;
+            max_gen_reg <= host_max_gen_reg;
+            temperature_reg <= host_temperature_reg;
+            rng_reg <= host_seed_reg;
+        end
+
+        if (clear_sync1 != clear_seen_reg) begin
+            host_clear_req <= 1'b1;
+            clear_seen_reg <= clear_sync1;
+        end
+
+        if (state_reg == ST_WAIT_CORE)
+            perf_cycles_reg <= perf_cycles_reg + 32'd1;
+
+        if (host_clear_req) begin
             state_reg <= ST_READY;
             token_reg <= BOS_TOKEN;
             pos_reg <= 8'd0;
             out_len_reg <= 8'd0;
-            rng_reg <= 32'h00000001;
+            done_latched_reg <= 1'b0;
+            last_token_reg <= 8'd0;
+            perf_cycles_reg <= 32'd0;
+            tokens_per_sec_reg <= 32'd0;
+            error_reg <= 1'b0;
+            host_clear_req <= 1'b0;
+            host_run_reg <= 1'b0;
+            for (out_i = 0; out_i < 16; out_i = out_i + 1) begin
+                output_mem[out_i] <= 8'd0;
+            end
+        end else if (!enable && !host_run_reg) begin
+            state_reg <= ST_READY;
+            token_reg <= BOS_TOKEN;
+            pos_reg <= 8'd0;
+            out_len_reg <= 8'd0;
             done_latched_reg <= 1'b0;
             last_token_reg <= 8'd0;
         end else begin
             case (state_reg)
                 ST_READY: begin
-                    if (key0_prev && !KEY[0]) begin
+                    if (host_start_req) begin
                         token_reg <= BOS_TOKEN;
                         pos_reg <= 8'd0;
                         out_len_reg <= 8'd0;
-                        rng_reg <= rng_reg + 32'h9E3779B9;
                         done_latched_reg <= 1'b0;
                         last_token_reg <= 8'd0;
+                        perf_cycles_reg <= 32'd0;
+                        tokens_per_sec_reg <= 32'd0;
+                        error_reg <= 1'b0;
+                        for (out_i = 0; out_i < 16; out_i = out_i + 1) begin
+                            output_mem[out_i] <= 8'd0;
+                        end
                         clear_cache_reg <= 1'b1;
-                        start_core_reg <= 1'b1;
-                        state_reg <= ST_WAIT_CORE;
+                        if (max_gen_reg == 8'd0 || max_gen_reg > 8'd15) begin
+                            error_reg <= 1'b1;
+                            done_latched_reg <= 1'b1;
+                            state_reg <= ST_DONE;
+                        end else begin
+                            start_core_reg <= 1'b1;
+                            state_reg <= ST_WAIT_CORE;
+                        end
+                        host_start_req <= 1'b0;
                     end
                 end
 
@@ -114,28 +255,50 @@ always @(posedge clk) begin
                         last_token_reg <= core_next_token;
                         if ((core_next_token == BOS_TOKEN) || (pos_reg == 8'd15)) begin
                             done_latched_reg <= 1'b1;
+                            if (perf_cycles_reg != 32'd0)
+                                tokens_per_sec_reg <= (out_len_reg * CORE_CLOCK_HZ) / perf_cycles_reg;
                             state_reg <= ST_DONE;
                         end else begin
+                            output_mem[out_len_reg] <= core_next_token;
                             token_reg <= core_next_token;
                             pos_reg <= pos_reg + 8'd1;
                             out_len_reg <= out_len_reg + 8'd1;
-                            start_core_reg <= 1'b1;
-                            state_reg <= ST_WAIT_CORE;
+                            if ((out_len_reg + 8'd1) >= max_gen_reg) begin
+                                done_latched_reg <= 1'b1;
+                                if (perf_cycles_reg != 32'd0)
+                                    tokens_per_sec_reg <= ((out_len_reg + 8'd1) * CORE_CLOCK_HZ) / perf_cycles_reg;
+                                state_reg <= ST_DONE;
+                            end else begin
+                                start_core_reg <= 1'b1;
+                                state_reg <= ST_WAIT_CORE;
+                            end
                         end
                     end
                 end
 
                 ST_DONE: begin
-                    if (key0_prev && !KEY[0]) begin
+                    if (host_start_req) begin
                         token_reg <= BOS_TOKEN;
                         pos_reg <= 8'd0;
                         out_len_reg <= 8'd0;
-                        rng_reg <= rng_reg + 32'h9E3779B9;
                         done_latched_reg <= 1'b0;
                         last_token_reg <= 8'd0;
+                        perf_cycles_reg <= 32'd0;
+                        tokens_per_sec_reg <= 32'd0;
+                        error_reg <= 1'b0;
+                        for (out_i = 0; out_i < 16; out_i = out_i + 1) begin
+                            output_mem[out_i] <= 8'd0;
+                        end
                         clear_cache_reg <= 1'b1;
-                        start_core_reg <= 1'b1;
-                        state_reg <= ST_WAIT_CORE;
+                        if (max_gen_reg == 8'd0 || max_gen_reg > 8'd15) begin
+                            error_reg <= 1'b1;
+                            done_latched_reg <= 1'b1;
+                            state_reg <= ST_DONE;
+                        end else begin
+                            start_core_reg <= 1'b1;
+                            state_reg <= ST_WAIT_CORE;
+                        end
+                        host_start_req <= 1'b0;
                     end
                 end
 
@@ -148,7 +311,7 @@ end
 assign LEDR[0] = enable && (state_reg == ST_READY);
 assign LEDR[1] = enable && (state_reg == ST_WAIT_CORE);
 assign LEDR[2] = done_latched_reg;
-assign LEDR[3] = core_done;
+assign LEDR[3] = host_toggle_reg;
 assign LEDR[4] = resetn;
 assign LEDR[5] = enable;
 assign LEDR[6] = cycle_blink_reg[15] && (state_reg == ST_WAIT_CORE);
@@ -162,6 +325,41 @@ assign HEX2 = hex7seg(out_len_reg[3:0]);
 assign HEX3 = hex7seg(out_len_reg[7:4]);
 assign HEX4 = hex7seg({1'b0, state_reg});
 assign HEX5 = hex7seg({2'b00, SW});
+
+reg [31:0] read_data_comb;
+
+always @(*) begin
+    read_data_comb = 32'd0;
+    case (jtag_master_address[9:2])
+        6'h00: read_data_comb = 32'h4D475254; // MGRT
+        6'h01: read_data_comb = 32'h00020000;
+        6'h02: read_data_comb = 32'd0;
+        6'h03: read_data_comb = {
+            pos_reg,
+            out_len_reg,
+            8'd0,
+            3'd0,
+            host_toggle_reg,
+            error_reg,
+            done_latched_reg,
+            (state_reg == ST_WAIT_CORE),
+            (state_reg == ST_READY)
+        };
+        6'h04: read_data_comb = {temperature_reg, max_gen_reg, 8'd0};
+        6'h05: read_data_comb = rng_reg;
+        6'h06: read_data_comb = {core_top_logit[15:0], core_argmax_token, last_token_reg};
+        6'h07: read_data_comb = {16'd0, 8'd0, BOS_TOKEN};
+        6'h36: read_data_comb = perf_cycles_reg;
+        6'h37: read_data_comb = tokens_per_sec_reg;
+        default: begin
+            if ((jtag_master_address[9:2] >= 6'h18) && (jtag_master_address[9:2] < 6'h28)) begin
+                read_data_comb = {24'd0, output_mem[jtag_master_address[9:2] - 6'h18]};
+            end else begin
+                read_data_comb = 32'd0;
+            end
+        end
+    endcase
+end
 
 function [6:0] hex7seg;
     input [3:0] nibble;
