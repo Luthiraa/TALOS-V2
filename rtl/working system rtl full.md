@@ -182,6 +182,15 @@ Run inference over JTAG:
 
 The generated name appears first as plain text and again in the packet summary as `output_text=...`.
 
+The C launcher in the repository root sends the BOS-start command through the same JTAG/MMIO bridge:
+
+```bat
+clang -Wall -Wextra main.c -o microgpt_bos_start.exe
+.\microgpt_bos_start.exe --steps 15 --temperature 0.5 --seed 2
+```
+
+The fake `--karpathy-reference`/`KREF` token stream was removed. The JTAG commands now report only the active RTL inference core output.
+
 ## Latest Build Result
 
 The trained-weight RTL build completed successfully with Quartus Prime 18.1 Lite.
@@ -247,6 +256,8 @@ PASS: RTL core is deterministic for repeated seed/config.
 
 This means the current RTL is deterministic, but it is not exact to Karpathy Python. Exact matching would require changing the arithmetic and sampler behavior, not the transformer topology.
 
+Preloading Python/Colab random numbers into memory can make the sampling thresholds deterministic, but it does not by itself make the probability distribution identical. Exact distribution matching also requires the RTL to expose or compute the same logits and softmax probabilities as Python for each generated position.
+
 ## JTAG/MMIO Changes
 
 The RTL top-level JTAG register path currently provides:
@@ -257,6 +268,7 @@ The RTL top-level JTAG register path currently provides:
 - configuration register for max generation length and temperature
 - seed register
 - status register with ready, busy, done, error, host activity, output length, and position
+- BOS token register at `0x1C`
 - output token memory window at `0x60`
 - performance cycle and token-rate counters
 

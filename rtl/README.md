@@ -56,6 +56,13 @@ From this directory in PowerShell:
 
 The generated name is printed as plain text first and repeated in `output_text=...`.
 
+The C launcher in the repository root also starts generation from BOS over the same JTAG/MMIO bridge:
+
+```powershell
+clang -Wall -Wextra main.c -o microgpt_bos_start.exe
+.\microgpt_bos_start.exe --steps 15 --temperature 0.5 --seed 2
+```
+
 ## Compute structure
 
 The active microgpt core does matrix-vector dot products directly in the FSM. It is not a systolic array. Projection stages such as `ST_Q_LINEAR`, `ST_K_LINEAR`, `ST_V_LINEAR`, `ST_ATTN_WO`, `ST_FC1`, `ST_FC2`, and `ST_LM_HEAD` walk rows and columns with `row_reg`, `col_reg`, and a single accumulator.
@@ -67,6 +74,10 @@ The separate `matrixmul_unit.sv` and `processing_element.sv` files are a standal
 The RTL is deterministic for the same seed and settings. `tb_microgpt_core.sv` verifies that repeated runs with the same seed produce the same RTL token sequence in ModelSim.
 
 The RTL does not currently match Karpathy's Python `microgpt.py` bit-for-bit. The Python reference uses floating-point math, exact `math.exp` softmax, and Python `random.choices`; this RTL uses Q4.12 fixed-point arithmetic, approximate exponential weights, saturation/rounding, and an xorshift32 sampler.
+
+The fake hardware-resident Karpathy reference stream was removed. `run_jtag_inference.bat` now only reports the active RTL inference core output.
+
+To make the probability distribution match Karpathy exactly, the hardware path needs the same numerical logits-to-probability behavior as Python: equivalent precision/order for RMSNorm, matvec, attention softmax, MLP, final softmax/temperature, and Python-compatible sampling thresholds. Preloading random numbers alone only fixes the sampler; it does not make the probability distribution match if the logits and softmax differ.
 
 Use this command to show the exact Karpathy reference output from the trained RTL weights:
 

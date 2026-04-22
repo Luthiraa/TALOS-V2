@@ -69,10 +69,12 @@ wire [7:0] core_next_token;
 wire [7:0] core_argmax_token;
 wire [31:0] core_rng_state;
 wire signed [15:0] core_top_logit;
+wire [9:0] jtag_word_addr;
 
 integer out_i;
 
 assign jtag_master_waitrequest = 1'b0;
+assign jtag_word_addr = jtag_master_address[11:2];
 
 jtag_microgpt_bridge jtag_bridge_inst (
     .clk_clk(CLOCK_50),
@@ -105,18 +107,18 @@ always @(posedge CLOCK_50) begin
 
     if (jtag_master_write) begin
         host_toggle_reg <= ~host_toggle_reg;
-        case (jtag_master_address[9:2])
-            6'h02: begin
+        case (jtag_word_addr)
+            10'h002: begin
                 if (jtag_master_writedata[0])
                     host_start_toggle_50 <= ~host_start_toggle_50;
                 if (jtag_master_writedata[1])
                     host_clear_toggle_50 <= ~host_clear_toggle_50;
             end
-            6'h04: begin
+            10'h004: begin
                 host_max_gen_reg <= jtag_master_writedata[15:8];
                 host_temperature_reg <= jtag_master_writedata[31:16];
             end
-            6'h05: begin
+            10'h005: begin
                 host_seed_reg <= jtag_master_writedata;
             end
             default: begin
@@ -330,11 +332,11 @@ reg [31:0] read_data_comb;
 
 always @(*) begin
     read_data_comb = 32'd0;
-    case (jtag_master_address[9:2])
-        6'h00: read_data_comb = 32'h4D475254; // MGRT
-        6'h01: read_data_comb = 32'h00020000;
-        6'h02: read_data_comb = 32'd0;
-        6'h03: read_data_comb = {
+    case (jtag_word_addr)
+        10'h000: read_data_comb = 32'h4D475254; // MGRT
+        10'h001: read_data_comb = 32'h00020000;
+        10'h002: read_data_comb = 32'd0;
+        10'h003: read_data_comb = {
             pos_reg,
             out_len_reg,
             8'd0,
@@ -345,15 +347,15 @@ always @(*) begin
             (state_reg == ST_WAIT_CORE),
             (state_reg == ST_READY)
         };
-        6'h04: read_data_comb = {temperature_reg, max_gen_reg, 8'd0};
-        6'h05: read_data_comb = rng_reg;
-        6'h06: read_data_comb = {core_top_logit[15:0], core_argmax_token, last_token_reg};
-        6'h07: read_data_comb = {16'd0, 8'd0, BOS_TOKEN};
-        6'h36: read_data_comb = perf_cycles_reg;
-        6'h37: read_data_comb = tokens_per_sec_reg;
+        10'h004: read_data_comb = {temperature_reg, max_gen_reg, 8'd0};
+        10'h005: read_data_comb = rng_reg;
+        10'h006: read_data_comb = {core_top_logit[15:0], core_argmax_token, last_token_reg};
+        10'h007: read_data_comb = {16'd0, 8'd0, BOS_TOKEN};
+        10'h036: read_data_comb = perf_cycles_reg;
+        10'h037: read_data_comb = tokens_per_sec_reg;
         default: begin
-            if ((jtag_master_address[9:2] >= 6'h18) && (jtag_master_address[9:2] < 6'h28)) begin
-                read_data_comb = {24'd0, output_mem[jtag_master_address[9:2] - 6'h18]};
+            if ((jtag_word_addr >= 10'h018) && (jtag_word_addr < 10'h028)) begin
+                read_data_comb = {24'd0, output_mem[jtag_word_addr - 10'h018]};
             end else begin
                 read_data_comb = 32'd0;
             end
