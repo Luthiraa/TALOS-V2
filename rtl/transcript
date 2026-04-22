@@ -1,0 +1,20 @@
+# vsim -c work_clock_check.tb_microgpt_core -do "run -all; quit -f" 
+# Start time: 16:21:24 on Apr 22,2026
+# Loading sv_std.std
+# Loading work_clock_check.tb_microgpt_core
+# Loading work_clock_check.microgpt_exact_core
+# Loading work_clock_check.systolic_matvec16_tile
+# run -all
+# Run A, seed=2
+# step pos=0 in=26 out=12 argmax=12 seed_out=0x00084042 top_logit=11468
+# step pos=1 in=12 out=26 argmax=26 seed_out=0x08008c02 top_logit=20020
+# Run B, seed=2
+# step pos=0 in=26 out=12 argmax=12 seed_out=0x00084042 top_logit=11468
+# step pos=1 in=12 out=26 argmax=26 seed_out=0x08008c02 top_logit=20020
+# RTL deterministic output tokens: 12
+# Karpathy exact first sample tokens are 10 0 12 14 13 26 (kamon).
+# PASS: RTL core is deterministic for repeated seed/config.
+# ** Note: $finish    : tb_microgpt_core.sv(169)
+#    Time: 52535 ns  Iteration: 1  Instance: /tb_microgpt_core
+# End time: 16:21:24 on Apr 22,2026, Elapsed time: 0:00:00
+# Errors: 0, Warnings: 0

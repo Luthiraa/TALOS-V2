@@ -65,7 +65,11 @@ clang -Wall -Wextra main.c -o microgpt_bos_start.exe
 
 ## Compute structure
 
-The active microgpt core does matrix-vector dot products directly in the FSM. It is not a systolic array. Projection stages such as `ST_Q_LINEAR`, `ST_K_LINEAR`, `ST_V_LINEAR`, `ST_ATTN_WO`, `ST_FC1`, `ST_FC2`, and `ST_LM_HEAD` walk rows and columns with `row_reg`, `col_reg`, and a single accumulator.
+The active microgpt core now uses a streamed 4-lane systolic MAC tile for the learned projection matrices. Projection stages such as `ST_Q_LINEAR`, `ST_K_LINEAR`, `ST_V_LINEAR`, `ST_ATTN_WO`, `ST_FC1`, `ST_FC2`, and `ST_LM_HEAD` reuse `systolic_matvec16_tile.sv` to consume one input column per cycle and accumulate four output rows in parallel.
+
+The tile is intentionally 4 lanes, not 16, because the full 16-lane version simulated correctly but did not fit on the 5CSEMA5. The 4-lane streamed version preserves the model topology and fits with positive timing.
+
+The core clock is generated from the 50 MHz board clock with a divide-by-12 register clock, so the active core runs at about 4.167 MHz. A PLL is not required for this frequency.
 
 The separate `matrixmul_unit.sv` and `processing_element.sv` files are a standalone matrix-multiply test path and are not instantiated by `de1_soc_microgpt_rtl.sv`.
 

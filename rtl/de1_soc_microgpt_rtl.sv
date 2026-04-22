@@ -14,10 +14,11 @@ localparam [7:0] BOS_TOKEN = 8'd26;
 localparam [2:0] ST_READY = 3'd0;
 localparam [2:0] ST_WAIT_CORE = 3'd1;
 localparam [2:0] ST_DONE = 3'd2;
-localparam [31:0] CORE_CLOCK_HZ = 32'd390625;
+localparam [31:0] CORE_CLOCK_HZ = 32'd4166666;
 
-reg [6:0] clkdiv = 7'd0;
-wire clk = clkdiv[6];
+reg [2:0] core_clk_div = 3'd0;
+reg core_clk_reg = 1'b0;
+wire clk = core_clk_reg;
 wire resetn = ~SW[1];
 wire enable = SW[0];
 
@@ -90,7 +91,12 @@ jtag_microgpt_bridge jtag_bridge_inst (
 );
 
 always @(posedge CLOCK_50) begin
-    clkdiv <= clkdiv + 7'd1;
+    if (core_clk_div == 3'd5) begin
+        core_clk_div <= 3'd0;
+        core_clk_reg <= ~core_clk_reg;
+    end else begin
+        core_clk_div <= core_clk_div + 3'd1;
+    end
 end
 
 always @(posedge CLOCK_50) begin

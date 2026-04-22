@@ -102,9 +102,9 @@ mlp_dim    = 64
 
 ## Compute Structure
 
-The active microgpt core uses direct matrix-vector dot products inside the core FSM. It is not a systolic array.
+The active microgpt core uses a streamed 4-lane systolic MAC tile for the learned projection matrices.
 
-Projection stages walk rows and columns with one accumulator:
+Projection stages reuse `systolic_matvec16_tile.sv`, which streams one input column per cycle and accumulates four output rows in parallel:
 
 - `ST_Q_LINEAR`: query projection
 - `ST_K_LINEAR`: key projection
@@ -113,6 +113,10 @@ Projection stages walk rows and columns with one accumulator:
 - `ST_FC1`: MLP first projection
 - `ST_FC2`: MLP second projection
 - `ST_LM_HEAD`: final logits projection
+
+The full 16-lane version simulated correctly but exceeded the 5CSEMA5 LAB budget during fitting. The 4-lane streamed tile is the fitted implementation.
+
+The active core clock is generated from the 50 MHz board clock with a divide-by-12 register clock, so the microgpt core runs at about 4.167 MHz. A PLL is not required for this frequency.
 
 The `matrixmul_unit.sv` and `processing_element.sv` files are separate matrix-multiply test hardware. They are not instantiated by the active `de1_soc_microgpt_rtl.sv` top level.
 
@@ -199,21 +203,21 @@ Fit summary:
 
 ```text
 Device: 5CSEMA5F31C6
-Logic utilization: 15,091 / 32,070 ALMs (47%)
-Registers: 13,305
+Logic utilization: 17,792 / 32,070 ALMs (55%)
+Registers: 14,624
 Pins: 55 / 457
 Block memory bits: 512 / 4,065,280
-DSP blocks: 13 / 87
+DSP blocks: 10 / 87
 Timing: positive setup/hold slack reported for CLOCK_50_IN, CORE_CLK, and altera_reserved_tck in the latest run
 ```
 
 The design uses a divided core clock:
 
 ```text
-CORE_CLK = CLOCK_50 / 128
+CORE_CLK = CLOCK_50 / 12
 ```
 
-This is intentionally slow, but it allows the current hardware implementation to meet timing.
+This keeps the core clock simple and still allows the current hardware implementation to meet timing.
 
 ## Verification Added
 
@@ -252,6 +256,14 @@ Observed result:
 RTL deterministic output tokens: 12
 Karpathy exact first sample tokens are 10 0 12 14 13 26 (kamon).
 PASS: RTL core is deterministic for repeated seed/config.
+```
+
+The programmed systolic build was also checked over JTAG:
+
+```text
+output_text=m
+perf_cycles=2618
+tokens_per_sec=1194
 ```
 
 This means the current RTL is deterministic, but it is not exact to Karpathy Python. Exact matching would require changing the arithmetic and sampler behavior, not the transformer topology.
