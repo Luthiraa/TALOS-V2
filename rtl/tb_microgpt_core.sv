@@ -18,6 +18,7 @@ module tb_microgpt_core;
     logic [7:0] argmax_token;
     logic [31:0] rng_state_out;
     logic signed [15:0] top_logit_q12;
+    integer cycle_count = 0;
 
     integer i;
     integer len_a;
@@ -45,6 +46,7 @@ module tb_microgpt_core;
     );
 
     always #5 clk = ~clk;
+    always @(posedge clk) cycle_count <= cycle_count + 1;
 
     task automatic reset_core;
         begin
@@ -68,11 +70,14 @@ module tb_microgpt_core;
         output [7:0] token_next;
         output [31:0] seed_next;
         integer timeout;
+        integer start_cycle;
+        integer step_cycles;
         begin
             token_in = token;
             pos_in = pos;
             rng_state_in = seed;
             clear_cache = clear;
+            start_cycle = cycle_count;
             start = 1'b1;
             @(posedge clk);
             start = 1'b0;
@@ -91,8 +96,9 @@ module tb_microgpt_core;
 
             token_next = next_token;
             seed_next = rng_state_out;
-            $display("step pos=%0d in=%0d out=%0d argmax=%0d seed_out=0x%08x top_logit=%0d",
-                     pos, token, token_next, argmax_token, seed_next, top_logit_q12);
+            step_cycles = cycle_count - start_cycle;
+            $display("step pos=%0d in=%0d out=%0d argmax=%0d seed_out=0x%08x top_logit=%0d cycles=%0d",
+                     pos, token, token_next, argmax_token, seed_next, top_logit_q12, step_cycles);
             @(posedge clk);
         end
     endtask
@@ -153,6 +159,17 @@ module tb_microgpt_core;
                          i, seq_a[i], seq_b[i]);
                 errors = errors + 1;
             end
+        end
+
+        if (len_a != 5 ||
+            seq_a[0] != 8'd0 ||
+            seq_a[1] != 8'd13 ||
+            seq_a[2] != 8'd0 ||
+            seq_a[3] != 8'd13 ||
+            seq_a[4] != 8'd0) begin
+            $display("ERROR: expected baseline sampled token sequence [0 13 0 13 0], got len=%0d first=%0d",
+                     len_a, seq_a[0]);
+            errors = errors + 1;
         end
 
         $write("RTL deterministic output tokens:");

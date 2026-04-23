@@ -99,6 +99,7 @@ while {$timeout > 0} {
 set out_len [expr {($status >> 16) & 0xff}]
 puts [format {STATUS=0x%08X} $status]
 puts [format {OUT_LEN=%d} $out_len]
+puts [format {RNG_STATE=0x%08X} [mgpt_read32 $service_path 0x14]]
 
 set outputs {}
 for {set i 0} {$i < $out_len} {incr i} {

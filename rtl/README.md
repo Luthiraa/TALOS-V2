@@ -69,7 +69,11 @@ The active microgpt core now uses a streamed 4-lane systolic MAC tile for the le
 
 The tile is intentionally 4 lanes, not 16, because the full 16-lane version simulated correctly but did not fit on the 5CSEMA5. The 4-lane streamed version preserves the model topology and fits with positive timing.
 
-The core clock is generated from the 50 MHz board clock with a divide-by-12 register clock, so the active core runs at about 4.167 MHz. A PLL is not required for this frequency.
+To recover throughput without changing the microGPT math order, the long normalization and attention-output divide paths were moved into exact multicycle engines: `rms_scale_engine.sv` computes the original RMS scale value iteratively, and `sat_div16_engine.sv` computes the same saturated attention divide result the prior RTL expression produced.
+
+The active core clock is generated from the 50 MHz board clock with a divide-by-4 register clock, so the active core runs at about 12.5 MHz. The latest fitted slow-corner direct-core Fmax is about 13.22 MHz, so `/4` is the highest simple divider that still closes timing with margin on the current board build.
+
+With the current programmed build, `.\run_jtag_inference.bat --steps 15 --temperature 0.5 --seed 2 --stream` reports `output_text=m`, `perf_cycles=5286`, and `tokens_per_sec=2365`.
 
 The separate `matrixmul_unit.sv` and `processing_element.sv` files are a standalone matrix-multiply test path and are not instantiated by `de1_soc_microgpt_rtl.sv`.
 

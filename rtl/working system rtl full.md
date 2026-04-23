@@ -116,7 +116,12 @@ Projection stages reuse `systolic_matvec16_tile.sv`, which streams one input col
 
 The full 16-lane version simulated correctly but exceeded the 5CSEMA5 LAB budget during fitting. The 4-lane streamed tile is the fitted implementation.
 
-The active core clock is generated from the 50 MHz board clock with a divide-by-12 register clock, so the microgpt core runs at about 4.167 MHz. A PLL is not required for this frequency.
+The active core keeps the same model topology but now pipelines the long normalization and attention-output divide work into exact multicycle engines:
+
+- `rms_scale_engine.sv`: iterative reciprocal-square-root scale for the RMSNorm stages, preserving the previous integer result.
+- `sat_div16_engine.sv`: iterative saturated divide for the attention output accumulation, preserving the previous RTL divide semantics.
+
+The active core clock is generated from the 50 MHz board clock with a divide-by-4 register clock, so the microgpt core now runs at about 12.5 MHz. The latest timing report estimates the slow-corner direct-core Fmax at about 13.22 MHz, so `/4` closes timing while `50 MHz` direct still does not.
 
 The `matrixmul_unit.sv` and `processing_element.sv` files are separate matrix-multiply test hardware. They are not instantiated by the active `de1_soc_microgpt_rtl.sv` top level.
 
@@ -203,8 +208,8 @@ Fit summary:
 
 ```text
 Device: 5CSEMA5F31C6
-Logic utilization: 17,792 / 32,070 ALMs (55%)
-Registers: 14,624
+Logic utilization: 15,808 / 32,070 ALMs (49%)
+Registers: 15,427
 Pins: 55 / 457
 Block memory bits: 512 / 4,065,280
 DSP blocks: 10 / 87
@@ -214,7 +219,7 @@ Timing: positive setup/hold slack reported for CLOCK_50_IN, CORE_CLK, and altera
 The design uses a divided core clock:
 
 ```text
-CORE_CLK = CLOCK_50 / 12
+CORE_CLK = CLOCK_50 / 4
 ```
 
 This keeps the core clock simple and still allows the current hardware implementation to meet timing.
@@ -246,7 +251,7 @@ The ModelSim deterministic RTL test compiles and runs with:
 
 ```bat
 vlib work_microgpt_core
-vlog -nolock -sv -work work_microgpt_core microgpt_exact_core.sv tb_microgpt_core.sv
+vlog -nolock -sv -work work_microgpt_core rms_scale_engine.sv sat_div16_engine.sv systolic_matvec16_tile.sv microgpt_exact_core.sv tb_microgpt_core.sv
 vsim -c work_microgpt_core.tb_microgpt_core -do "run -all; quit -f"
 ```
 
@@ -262,8 +267,8 @@ The programmed systolic build was also checked over JTAG:
 
 ```text
 output_text=m
-perf_cycles=2618
-tokens_per_sec=1194
+perf_cycles=5286
+tokens_per_sec=2365
 ```
 
 This means the current RTL is deterministic, but it is not exact to Karpathy Python. Exact matching would require changing the arithmetic and sampler behavior, not the transformer topology.
