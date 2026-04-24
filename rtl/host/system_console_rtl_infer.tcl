@@ -53,6 +53,13 @@ if {[info exists ::env(MGPT_SEED)]} {
     set seed [expr {int($::env(MGPT_SEED))}]
 }
 set stream_tokens [mgpt_bool_env MGPT_STREAM_TOKENS 1]
+set sample_count 1
+if {[info exists ::env(MGPT_SAMPLE_COUNT)]} {
+    set sample_count [expr {int($::env(MGPT_SAMPLE_COUNT))}]
+    if {$sample_count < 1} {
+        set sample_count 1
+    }
+}
 set poll_ms 5
 if {[info exists ::env(MGPT_POLL_MS)]} {
     set poll_ms [expr {int($::env(MGPT_POLL_MS))}]
@@ -65,49 +72,56 @@ puts [format {ID=0x%08X} [mgpt_read32 $service_path 0x00]]
 puts [format {VERSION=0x%08X} [mgpt_read32 $service_path 0x04]]
 flush stdout
 
-master_write_32 $service_path 0x08 0x00000002
-master_write_32 $service_path 0x10 [expr {(($temp_q8_8 & 0xffff) << 16) | (($max_gen & 0xff) << 8)}]
-master_write_32 $service_path 0x14 $seed
-master_write_32 $service_path 0x08 0x00000001
+set current_seed $seed
+for {set sample_idx 0} {$sample_idx < $sample_count} {incr sample_idx} {
+    puts "SAMPLE_BEGIN=$sample_idx"
+    flush stdout
 
-set timeout 20000
-set streamed_len 0
-set status 0
-while {$timeout > 0} {
-    set status [mgpt_read32 $service_path 0x0C]
-    set out_len_now [expr {($status >> 16) & 0xff}]
-    if {$stream_tokens && ($out_len_now > $streamed_len)} {
-        for {set i $streamed_len} {$i < $out_len_now} {incr i} {
-            set token_word [mgpt_read32 $service_path [expr {0x60 + ($i * 4)}]]
-            puts "STREAM_TOKEN=[expr {$token_word & 0xff}]"
-            flush stdout
+    master_write_32 $service_path 0x08 0x00000002
+    master_write_32 $service_path 0x10 [expr {(($temp_q8_8 & 0xffff) << 16) | (($max_gen & 0xff) << 8)}]
+    master_write_32 $service_path 0x14 $current_seed
+    master_write_32 $service_path 0x08 0x00000001
+
+    set timeout 20000
+    set streamed_len 0
+    set status 0
+    while {$timeout > 0} {
+        set status [mgpt_read32 $service_path 0x0C]
+        set out_len_now [expr {($status >> 16) & 0xff}]
+        if {$stream_tokens && ($out_len_now > $streamed_len)} {
+            for {set i $streamed_len} {$i < $out_len_now} {incr i} {
+                set token_word [mgpt_read32 $service_path [expr {0x60 + ($i * 4)}]]
+                puts "STREAM_TOKEN=[expr {$token_word & 0xff}]"
+                flush stdout
+            }
+            set streamed_len $out_len_now
         }
-        set streamed_len $out_len_now
+        if {$status & 0x8} {
+            puts "ERROR=1"
+            break
+        }
+        if {$status & 0x4} {
+            puts "DONE=1"
+            break
+        }
+        after $poll_ms
+        incr timeout -1
     }
-    if {$status & 0x8} {
-        puts "ERROR=1"
-        break
-    }
-    if {$status & 0x4} {
-        puts "DONE=1"
-        break
-    }
-    after $poll_ms
-    incr timeout -1
-}
 
-set out_len [expr {($status >> 16) & 0xff}]
-puts [format {STATUS=0x%08X} $status]
-puts [format {OUT_LEN=%d} $out_len]
-puts [format {RNG_STATE=0x%08X} [mgpt_read32 $service_path 0x14]]
+    set out_len [expr {($status >> 16) & 0xff}]
+    set current_seed [mgpt_read32 $service_path 0x14]
+    puts [format {STATUS[%d]=0x%08X} $sample_idx $status]
+    puts [format {OUT_LEN[%d]=%d} $sample_idx $out_len]
+    puts [format {RNG_STATE[%d]=0x%08X} $sample_idx $current_seed]
+    puts [format {PERF_CYCLES[%d]=%u} $sample_idx [mgpt_read32 $service_path 0xD8]]
 
-set outputs {}
-for {set i 0} {$i < $out_len} {incr i} {
-    lappend outputs [mgpt_read32 $service_path [expr {0x60 + ($i * 4)}]]
+    set outputs {}
+    for {set i 0} {$i < $out_len} {incr i} {
+        lappend outputs [mgpt_read32 $service_path [expr {0x60 + ($i * 4)}]]
+    }
+    puts [format {OUTPUT_TOKENS[%d]=%s} $sample_idx $outputs]
+    puts "SAMPLE_END=$sample_idx"
+    flush stdout
 }
-puts [format {OUTPUT_TOKENS=%s} $outputs]
-puts [format {PERF_CYCLES=%u} [mgpt_read32 $service_path 0xD8]]
-puts [format {TOKENS_PER_SEC=%u} [mgpt_read32 $service_path 0xDC]]
-flush stdout
 
 close_service master $service_path

@@ -14,9 +14,8 @@ localparam [7:0] BOS_TOKEN = 8'd26;
 localparam [2:0] ST_READY = 3'd0;
 localparam [2:0] ST_WAIT_CORE = 3'd1;
 localparam [2:0] ST_DONE = 3'd2;
-localparam [31:0] CORE_CLOCK_HZ = 32'd12500000;
+localparam [31:0] CORE_CLOCK_HZ = 32'd25000000;
 
-reg core_clk_div = 1'b0;
 reg core_clk_reg = 1'b0;
 wire clk = core_clk_reg;
 wire resetn = ~SW[1];
@@ -45,15 +44,28 @@ reg read_pending_reg = 1'b0;
 reg host_run_reg = 1'b0;
 reg host_start_toggle_50 = 1'b0;
 reg host_clear_toggle_50 = 1'b0;
+reg host_step_toggle_50 = 1'b0;
 reg [31:0] host_seed_reg = 32'h00000001;
 reg [15:0] host_temperature_reg = 16'h0080;
 reg [7:0] host_max_gen_reg = 8'd15;
+reg host_direct_mode_50 = 1'b0;
+reg host_step_clear_50 = 1'b0;
+reg [7:0] host_step_token_50 = BOS_TOKEN;
+reg [7:0] host_step_pos_50 = 8'd0;
 reg start_sync0 = 1'b0;
 reg start_sync1 = 1'b0;
 reg start_seen_reg = 1'b0;
 reg clear_sync0 = 1'b0;
 reg clear_sync1 = 1'b0;
 reg clear_seen_reg = 1'b0;
+reg step_sync0 = 1'b0;
+reg step_sync1 = 1'b0;
+reg step_seen_reg = 1'b0;
+reg host_step_req = 1'b0;
+reg direct_mode_reg = 1'b0;
+reg step_clear_reg = 1'b0;
+reg [7:0] step_token_reg = BOS_TOKEN;
+reg [7:0] step_pos_reg = 8'd0;
 
 wire [31:0] jtag_master_address;
 wire        jtag_master_read;
@@ -70,6 +82,7 @@ wire [7:0] core_next_token;
 wire [7:0] core_argmax_token;
 wire [31:0] core_rng_state;
 wire signed [15:0] core_top_logit;
+wire signed [(27*16)-1:0] core_logits_flat;
 wire [9:0] jtag_word_addr;
 
 integer out_i;
@@ -91,12 +104,7 @@ jtag_microgpt_bridge jtag_bridge_inst (
 );
 
 always @(posedge CLOCK_50) begin
-    if (core_clk_div) begin
-        core_clk_div <= 1'b0;
-        core_clk_reg <= ~core_clk_reg;
-    end else begin
-        core_clk_div <= 1'b1;
-    end
+    core_clk_reg <= ~core_clk_reg;
 end
 
 always @(posedge CLOCK_50) begin
@@ -127,6 +135,16 @@ always @(posedge CLOCK_50) begin
             10'h005: begin
                 host_seed_reg <= jtag_master_writedata;
             end
+            10'h008: begin
+                host_direct_mode_50 <= jtag_master_writedata[0];
+                host_step_clear_50 <= jtag_master_writedata[1];
+                host_step_pos_50 <= jtag_master_writedata[15:8];
+                host_step_token_50 <= jtag_master_writedata[23:16];
+            end
+            10'h009: begin
+                if (jtag_master_writedata[0])
+                    host_step_toggle_50 <= ~host_step_toggle_50;
+            end
             default: begin
             end
         endcase
@@ -138,7 +156,7 @@ microgpt_exact_core core_inst (
     .resetn(resetn),
     .start(start_core_reg),
     .clear_cache(clear_cache_reg),
-    .sample_mode(1'b1),
+    .sample_mode(~direct_mode_reg),
     .temperature_q8_8(temperature_reg),
     .rng_state_in(rng_reg),
     .token_in(token_reg),
@@ -148,7 +166,8 @@ microgpt_exact_core core_inst (
     .next_token(core_next_token),
     .argmax_token(core_argmax_token),
     .rng_state_out(core_rng_state),
-    .top_logit_q12(core_top_logit)
+    .top_logit_q12(core_top_logit),
+    .logits_flat(core_logits_flat)
 );
 
 always @(posedge clk) begin
@@ -177,6 +196,14 @@ always @(posedge clk) begin
         clear_sync0 <= host_clear_toggle_50;
         clear_sync1 <= host_clear_toggle_50;
         clear_seen_reg <= host_clear_toggle_50;
+        step_sync0 <= host_step_toggle_50;
+        step_sync1 <= host_step_toggle_50;
+        step_seen_reg <= host_step_toggle_50;
+        host_step_req <= 1'b0;
+        direct_mode_reg <= 1'b0;
+        step_clear_reg <= 1'b0;
+        step_token_reg <= BOS_TOKEN;
+        step_pos_reg <= 8'd0;
         for (out_i = 0; out_i < 16; out_i = out_i + 1) begin
             output_mem[out_i] <= 8'd0;
         end
@@ -189,6 +216,8 @@ always @(posedge clk) begin
         start_sync1 <= start_sync0;
         clear_sync0 <= host_clear_toggle_50;
         clear_sync1 <= clear_sync0;
+        step_sync0 <= host_step_toggle_50;
+        step_sync1 <= step_sync0;
 
         if (start_sync1 != start_seen_reg) begin
             host_start_req <= 1'b1;
@@ -197,11 +226,21 @@ always @(posedge clk) begin
             max_gen_reg <= host_max_gen_reg;
             temperature_reg <= host_temperature_reg;
             rng_reg <= host_seed_reg;
+            direct_mode_reg <= 1'b0;
         end
 
         if (clear_sync1 != clear_seen_reg) begin
             host_clear_req <= 1'b1;
             clear_seen_reg <= clear_sync1;
+        end
+
+        if (step_sync1 != step_seen_reg) begin
+            host_step_req <= 1'b1;
+            step_seen_reg <= step_sync1;
+            direct_mode_reg <= host_direct_mode_50;
+            step_clear_reg <= host_step_clear_50;
+            step_token_reg <= host_step_token_50;
+            step_pos_reg <= host_step_pos_50;
         end
 
         if (state_reg == ST_WAIT_CORE)
@@ -219,6 +258,8 @@ always @(posedge clk) begin
             error_reg <= 1'b0;
             host_clear_req <= 1'b0;
             host_run_reg <= 1'b0;
+            host_step_req <= 1'b0;
+            direct_mode_reg <= 1'b0;
             for (out_i = 0; out_i < 16; out_i = out_i + 1) begin
                 output_mem[out_i] <= 8'd0;
             end
@@ -232,7 +273,22 @@ always @(posedge clk) begin
         end else begin
             case (state_reg)
                 ST_READY: begin
-                    if (host_start_req) begin
+                    if (host_step_req && direct_mode_reg) begin
+                        token_reg <= step_token_reg;
+                        pos_reg <= step_pos_reg;
+                        out_len_reg <= 8'd0;
+                        done_latched_reg <= 1'b0;
+                        last_token_reg <= 8'd0;
+                        perf_cycles_reg <= 32'd0;
+                        tokens_per_sec_reg <= 32'd0;
+                        error_reg <= 1'b0;
+                        if (step_clear_reg)
+                            rng_reg <= host_seed_reg;
+                        clear_cache_reg <= step_clear_reg;
+                        start_core_reg <= 1'b1;
+                        state_reg <= ST_WAIT_CORE;
+                        host_step_req <= 1'b0;
+                    end else if (host_start_req) begin
                         token_reg <= BOS_TOKEN;
                         pos_reg <= 8'd0;
                         out_len_reg <= 8'd0;
@@ -261,10 +317,11 @@ always @(posedge clk) begin
                     if (core_done) begin
                         rng_reg <= core_rng_state;
                         last_token_reg <= core_next_token;
-                        if ((core_next_token == BOS_TOKEN) || (pos_reg == 8'd15)) begin
+                        if (direct_mode_reg) begin
                             done_latched_reg <= 1'b1;
-                            if (perf_cycles_reg != 32'd0)
-                                tokens_per_sec_reg <= (out_len_reg * CORE_CLOCK_HZ) / perf_cycles_reg;
+                            state_reg <= ST_DONE;
+                        end else if ((core_next_token == BOS_TOKEN) || (pos_reg == 8'd15)) begin
+                            done_latched_reg <= 1'b1;
                             state_reg <= ST_DONE;
                         end else begin
                             output_mem[out_len_reg] <= core_next_token;
@@ -273,8 +330,6 @@ always @(posedge clk) begin
                             out_len_reg <= out_len_reg + 8'd1;
                             if ((out_len_reg + 8'd1) >= max_gen_reg) begin
                                 done_latched_reg <= 1'b1;
-                                if (perf_cycles_reg != 32'd0)
-                                    tokens_per_sec_reg <= ((out_len_reg + 8'd1) * CORE_CLOCK_HZ) / perf_cycles_reg;
                                 state_reg <= ST_DONE;
                             end else begin
                                 start_core_reg <= 1'b1;
@@ -285,7 +340,22 @@ always @(posedge clk) begin
                 end
 
                 ST_DONE: begin
-                    if (host_start_req) begin
+                    if (host_step_req && direct_mode_reg) begin
+                        token_reg <= step_token_reg;
+                        pos_reg <= step_pos_reg;
+                        out_len_reg <= 8'd0;
+                        done_latched_reg <= 1'b0;
+                        last_token_reg <= 8'd0;
+                        perf_cycles_reg <= 32'd0;
+                        tokens_per_sec_reg <= 32'd0;
+                        error_reg <= 1'b0;
+                        if (step_clear_reg)
+                            rng_reg <= host_seed_reg;
+                        clear_cache_reg <= step_clear_reg;
+                        start_core_reg <= 1'b1;
+                        state_reg <= ST_WAIT_CORE;
+                        host_step_req <= 1'b0;
+                    end else if (host_start_req) begin
                         token_reg <= BOS_TOKEN;
                         pos_reg <= 8'd0;
                         out_len_reg <= 8'd0;
@@ -347,6 +417,7 @@ always @(*) begin
             out_len_reg,
             8'd0,
             3'd0,
+            direct_mode_reg,
             host_toggle_reg,
             error_reg,
             done_latched_reg,
@@ -355,11 +426,16 @@ always @(*) begin
         };
         10'h004: read_data_comb = {temperature_reg, max_gen_reg, 8'd0};
         10'h005: read_data_comb = rng_reg;
+        10'h008: read_data_comb = {8'd0, step_token_reg, step_pos_reg, step_clear_reg, direct_mode_reg};
         10'h006: read_data_comb = {core_top_logit[15:0], core_argmax_token, last_token_reg};
         10'h007: read_data_comb = {16'd0, 8'd0, BOS_TOKEN};
         10'h036: read_data_comb = perf_cycles_reg;
         10'h037: read_data_comb = tokens_per_sec_reg;
         default: begin
+            if ((jtag_word_addr >= 10'h040) && (jtag_word_addr < (10'h040 + 10'd27))) begin
+                out_i = jtag_word_addr - 10'h040;
+                read_data_comb = {{16{core_logits_flat[(out_i*16)+15]}}, core_logits_flat[(out_i*16) +: 16]};
+            end else 
             if ((jtag_word_addr >= 10'h018) && (jtag_word_addr < 10'h028)) begin
                 read_data_comb = {24'd0, output_mem[jtag_word_addr - 10'h018]};
             end else begin

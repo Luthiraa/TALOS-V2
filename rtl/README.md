@@ -71,7 +71,11 @@ The tile is intentionally 4 lanes, not 16, because the full 16-lane version simu
 
 To recover throughput without changing the microGPT math order, the long normalization and attention-output divide paths were moved into exact multicycle engines: `rms_scale_engine.sv` computes the original RMS scale value iteratively, and `sat_div16_engine.sv` computes the same saturated attention divide result the prior RTL expression produced.
 
-The active core clock is generated from the 50 MHz board clock with a divide-by-4 register clock, so the active core runs at about 12.5 MHz. The latest fitted slow-corner direct-core Fmax is about 13.22 MHz, so `/4` is the highest simple divider that still closes timing with margin on the current board build.
+The streamed matvec tile asserts `done` on the final useful column instead of burning an extra idle cycle. This removes one cycle from each 4-row projection tile invocation while preserving the exact accumulated result.
+
+The attention output divider starts at bit 31, not bit 63. This is still exact for this datapath because the numerator is bounded by `4096 * 32768 * 16 = 2^31`, but it removes 32 idle divide iterations for each attention output element.
+
+The active core clock is generated from the 50 MHz board clock with a divide-by-2 register clock, so the active core runs at about 25 MHz. The latest fitted slow-corner direct-core Fmax is about 43.82 MHz, so the current build has margin at 25 MHz but should not be switched directly to 50 MHz without additional timing work or a PLL target below Fmax.
 
 With the current programmed build, `.\run_jtag_inference.bat --steps 15 --temperature 0.5 --seed 2 --stream` reports `output_text=m`, `perf_cycles=5286`, and `tokens_per_sec=2365`.
 

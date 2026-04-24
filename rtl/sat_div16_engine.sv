@@ -54,7 +54,10 @@ module sat_div16_engine (
                     denom_reg <= (denominator == 32'd0) ? 32'd1 : denominator;
                     rem_reg <= 65'd0;
                     quot_reg <= 64'd0;
-                    bit_reg <= 7'd63;
+                    // Attention numerator is sum(exp_q12 * value_q12) across at most
+                    // 16 positions: 4096 * 32768 * 16 = 2^31. Starting at bit 31
+                    // preserves the exact quotient and removes 32 dead divide cycles.
+                    bit_reg <= 7'd31;
                 end
             end else begin
                 rem_next = {rem_reg[63:0], num_reg[bit_reg]};

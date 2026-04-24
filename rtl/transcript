@@ -1,5 +1,5 @@
 # vsim -c work_fixcheck.tb_microgpt_core -do "run -all; quit -f" 
-# Start time: 12:15:23 on Apr 23,2026
+# Start time: 13:52:23 on Apr 23,2026
 # Loading sv_std.std
 # Loading work_fixcheck.tb_microgpt_core
 # Loading work_fixcheck.microgpt_exact_core
@@ -26,5 +26,5 @@
 # PASS: RTL core is deterministic for repeated seed/config.
 # ** Note: $finish    : tb_microgpt_core.sv(186)
 #    Time: 327015 ns  Iteration: 1  Instance: /tb_microgpt_core
-# End time: 12:15:24 on Apr 23,2026, Elapsed time: 0:00:01
+# End time: 13:52:23 on Apr 23,2026, Elapsed time: 0:00:00
 # Errors: 0, Warnings: 0

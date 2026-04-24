@@ -13,7 +13,8 @@ module microgpt_exact_core (
     output reg  [7:0]  next_token,
     output reg  [7:0]  argmax_token,
     output reg  [31:0] rng_state_out,
-    output reg  signed [15:0] top_logit_q12
+    output reg  signed [15:0] top_logit_q12,
+    output wire signed [(27*16)-1:0] logits_flat
 );
 
 localparam integer EMBED_DIM = 16;
@@ -113,6 +114,7 @@ reg signed [15:0] mlp_fc2_rom [0:1023];
 integer i;
 integer j;
 integer t;
+genvar logits_idx;
 
 reg signed [63:0] acc_next;
 reg signed [63:0] prod64;
@@ -379,6 +381,12 @@ function signed [31:0] apply_temperature_delta;
     end
 endfunction
 
+generate
+    for (logits_idx = 0; logits_idx < VOCAB_SIZE; logits_idx = logits_idx + 1) begin : GEN_LOGITS_FLAT
+        assign logits_flat[(logits_idx*16) +: 16] = logits[logits_idx];
+    end
+endgenerate
+
 always @(posedge clk) begin
     if (!resetn) begin
         state_reg <= ST_IDLE;
@@ -451,7 +459,10 @@ always @(posedge clk) begin
                     time_reg <= 5'd0;
                     acc_reg <= 64'sd0;
                     sumsq_reg <= 64'sd0;
-                    rng_state_out <= xorshift32(rng_state_in);
+                    if (sample_mode)
+                        rng_state_out <= xorshift32(rng_state_in);
+                    else
+                        rng_state_out <= rng_state_in;
                     if (clear_cache) begin
                         for (i = 0; i < 16; i = i + 1) begin
                             for (j = 0; j < EMBED_DIM; j = j + 1) begin

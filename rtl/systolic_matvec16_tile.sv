@@ -53,7 +53,7 @@ module systolic_matvec16_tile #(
                 busy <= 1'b1;
                 col_idx <= 5'd0;
             end else if (busy) begin
-                if (col_idx == COLS[4:0]) begin
+                if (col_idx == (COLS - 1)) begin
                     busy <= 1'b0;
                     done <= 1'b1;
                 end else begin
