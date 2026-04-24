@@ -11,7 +11,7 @@ N_EMBD = 16
 BLOCK_SIZE = 16
 BOS_TOKEN = 26
 VOCAB_SIZE = 27
-CORE_CLOCK_HZ = 25_000_000
+CORE_CLOCK_HZ = 56_250_000
 
 ROOT_DIR = Path(__file__).resolve().parents[2]
 RTL_DIR = Path(__file__).resolve().parents[1]

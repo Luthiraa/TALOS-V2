@@ -477,11 +477,14 @@ always @(posedge clk) begin
             end
 
             ST_LOAD_X: begin
-                x_vec[idx_reg] <= sat16($signed(wte_rom[token_reg * EMBED_DIM + idx_reg]) + $signed(wpe_rom[pos_reg * EMBED_DIM + idx_reg]));
+                value16 = sat16($signed(wte_rom[token_reg * EMBED_DIM + idx_reg]) + $signed(wpe_rom[pos_reg * EMBED_DIM + idx_reg]));
+                prod64 = $signed(value16) * $signed(value16);
+                x_vec[idx_reg] <= value16;
+                sumsq_reg <= sumsq_reg + (prod64 >>> FRAC_BITS);
                 if (idx_reg == EMBED_DIM - 1) begin
                     idx_reg <= 4'd0;
-                    sumsq_reg <= 64'sd0;
-                    state_reg <= ST_RMS0_SUM;
+                    rms_sumsq_reg <= sumsq_reg + (prod64 >>> FRAC_BITS);
+                    state_reg <= ST_RMS0_WAIT;
                 end else begin
                     idx_reg <= idx_reg + 4'd1;
                 end
@@ -504,14 +507,21 @@ always @(posedge clk) begin
                 if (rms_done) begin
                     rms_scale_reg <= rms_scale_out;
                     idx_reg <= 4'd0;
+                    sumsq_reg <= 64'sd0;
                     state_reg <= ST_RMS0_APPLY;
                 end
             end
 
             ST_RMS0_APPLY: begin
-                x_vec[idx_reg] <= mul_q12(x_vec[idx_reg], rms_scale_reg);
+                value16 = mul_q12(x_vec[idx_reg], rms_scale_reg);
+                prod64 = $signed(value16) * $signed(value16);
+                x_vec[idx_reg] <= value16;
+                residual_vec[idx_reg] <= value16;
+                sumsq_reg <= sumsq_reg + (prod64 >>> FRAC_BITS);
                 if (idx_reg == EMBED_DIM - 1) begin
-                    state_reg <= ST_ATTN_SAVE_RES;
+                    idx_reg <= 4'd0;
+                    rms_sumsq_reg <= sumsq_reg + (prod64 >>> FRAC_BITS);
+                    state_reg <= ST_ATTN_RMS_WAIT;
                 end else begin
                     idx_reg <= idx_reg + 4'd1;
                 end
@@ -616,19 +626,18 @@ always @(posedge clk) begin
             end
 
             ST_ATTN_DOT: begin
-                acc_next = acc_reg + ($signed(q_vec[head_reg * HEAD_DIM + col_reg]) * $signed(k_cache[time_reg][head_reg * HEAD_DIM + col_reg]));
-                if (col_reg == HEAD_DIM - 1) begin
-                    attn_scores[time_reg] <= sat16((acc_next >>> FRAC_BITS) >>> 1);
-                    acc_reg <= 64'sd0;
-                    col_reg <= 7'd0;
-                    if (time_reg == pos_reg[4:0]) begin
-                        state_reg <= ST_ATTN_SOFT;
-                    end else begin
-                        time_reg <= time_reg + 5'd1;
-                    end
+                acc_next = 64'sd0 +
+                    ($signed(q_vec[head_reg * HEAD_DIM + 0]) * $signed(k_cache[time_reg][head_reg * HEAD_DIM + 0])) +
+                    ($signed(q_vec[head_reg * HEAD_DIM + 1]) * $signed(k_cache[time_reg][head_reg * HEAD_DIM + 1])) +
+                    ($signed(q_vec[head_reg * HEAD_DIM + 2]) * $signed(k_cache[time_reg][head_reg * HEAD_DIM + 2])) +
+                    ($signed(q_vec[head_reg * HEAD_DIM + 3]) * $signed(k_cache[time_reg][head_reg * HEAD_DIM + 3]));
+                attn_scores[time_reg] <= sat16((acc_next >>> FRAC_BITS) >>> 1);
+                acc_reg <= 64'sd0;
+                col_reg <= 7'd0;
+                if (time_reg == pos_reg[4:0]) begin
+                    state_reg <= ST_ATTN_SOFT;
                 end else begin
-                    acc_reg <= acc_next;
-                    col_reg <= col_reg + 7'd1;
+                    time_reg <= time_reg + 5'd1;
                 end
             end
 
@@ -721,6 +730,7 @@ always @(posedge clk) begin
                     if (row_reg == 7'd12) begin
                         row_reg <= 7'd0;
                         idx_reg <= 4'd0;
+                        sumsq_reg <= 64'sd0;
                         state_reg <= ST_ATTN_ADD;
                     end else begin
                         row_reg <= row_reg + 7'd4;
@@ -729,9 +739,15 @@ always @(posedge clk) begin
             end
 
             ST_ATTN_ADD: begin
-                x_vec[idx_reg] <= sat16($signed(norm_vec[idx_reg]) + $signed(residual_vec[idx_reg]));
+                value16 = sat16($signed(norm_vec[idx_reg]) + $signed(residual_vec[idx_reg]));
+                prod64 = $signed(value16) * $signed(value16);
+                x_vec[idx_reg] <= value16;
+                residual_vec[idx_reg] <= value16;
+                sumsq_reg <= sumsq_reg + (prod64 >>> FRAC_BITS);
                 if (idx_reg == EMBED_DIM - 1) begin
-                    state_reg <= ST_MLP_SAVE_RES;
+                    idx_reg <= 4'd0;
+                    rms_sumsq_reg <= sumsq_reg + (prod64 >>> FRAC_BITS);
+                    state_reg <= ST_MLP_RMS_WAIT;
                 end else begin
                     idx_reg <= idx_reg + 4'd1;
                 end

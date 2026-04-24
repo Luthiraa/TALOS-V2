@@ -14,11 +14,11 @@ localparam [7:0] BOS_TOKEN = 8'd26;
 localparam [2:0] ST_READY = 3'd0;
 localparam [2:0] ST_WAIT_CORE = 3'd1;
 localparam [2:0] ST_DONE = 3'd2;
-localparam [31:0] CORE_CLOCK_HZ = 32'd25000000;
+localparam [31:0] CORE_CLOCK_HZ = 32'd56250000;
 
-reg core_clk_reg = 1'b0;
-wire clk = core_clk_reg;
-wire resetn = ~SW[1];
+wire clk;
+wire pll_locked;
+wire resetn = ~SW[1] && pll_locked;
 wire enable = SW[0];
 
 reg [2:0] state_reg = ST_READY;
@@ -103,9 +103,12 @@ jtag_microgpt_bridge jtag_bridge_inst (
     .master_byteenable(jtag_master_byteenable)
 );
 
-always @(posedge CLOCK_50) begin
-    core_clk_reg <= ~core_clk_reg;
-end
+sys_pll_56_25 core_pll_inst (
+    .inclk0(CLOCK_50),
+    .areset(SW[1]),
+    .c0(clk),
+    .locked(pll_locked)
+);
 
 always @(posedge CLOCK_50) begin
     jtag_master_readdatavalid <= 1'b0;

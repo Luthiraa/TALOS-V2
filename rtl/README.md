@@ -75,9 +75,9 @@ The streamed matvec tile asserts `done` on the final useful column instead of bu
 
 The attention output divider starts at bit 31, not bit 63. This is still exact for this datapath because the numerator is bounded by `4096 * 32768 * 16 = 2^31`, but it removes 32 idle divide iterations for each attention output element.
 
-The active core clock is generated from the 50 MHz board clock with a divide-by-2 register clock, so the active core runs at about 25 MHz. The latest fitted slow-corner direct-core Fmax is about 43.82 MHz, so the current build has margin at 25 MHz but should not be switched directly to 50 MHz without additional timing work or a PLL target below Fmax.
+The active core clock is generated from the 50 MHz board clock with a 56.25 MHz PLL (`sys_pll_56_25.v`). The latest fitted slow-corner PLL-core Fmax is about 57.98 MHz with 0.529 ns setup slack at the 56.25 MHz target, so the current build is intentionally close to the timing limit and should not be raised further without another timing run and hardware validation.
 
-With the current programmed build, `.\run_jtag_inference.bat --steps 15 --temperature 0.5 --seed 2 --stream` reports `output_text=m`, `perf_cycles=5286`, and `tokens_per_sec=2365`.
+With the current programmed build, `.\run_jtag_inference.bat --steps 15 --temperature 0.5 --seed 2 --stream` reports `output_text=kamon`, `perf_cycles=12060`, and `tokens_per_sec=23321` using the Python sampler over RTL logits. The pure RTL sampler path (`--sampler rtl`) reports `output_text=ananaaaaaa`, `perf_cycles=12384`, and `tokens_per_sec=45422` for the same seed/config.
 
 The separate `matrixmul_unit.sv` and `processing_element.sv` files are a standalone matrix-multiply test path and are not instantiated by `de1_soc_microgpt_rtl.sv`.
 

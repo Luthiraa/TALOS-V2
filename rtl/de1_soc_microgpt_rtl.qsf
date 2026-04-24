@@ -7,6 +7,7 @@ set_global_assignment -name SYSTEMVERILOG_FILE microgpt_exact_core.sv
 set_global_assignment -name SYSTEMVERILOG_FILE rms_scale_engine.sv
 set_global_assignment -name SYSTEMVERILOG_FILE sat_div16_engine.sv
 set_global_assignment -name SYSTEMVERILOG_FILE systolic_matvec16_tile.sv
+set_global_assignment -name VERILOG_FILE sys_pll_56_25.v
 set_global_assignment -name SDC_FILE de1_soc_microgpt_rtl.sdc
 set_global_assignment -name QIP_FILE ../hls/v2/jtag_microgpt_bridge/synthesis/jtag_microgpt_bridge.qip
 set_global_assignment -name FITTER_EFFORT "STANDARD FIT"
