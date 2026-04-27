@@ -73,11 +73,15 @@ To recover throughput without changing the microGPT math order, the long normali
 
 The streamed matvec tile asserts `done` on the final useful column instead of burning an extra idle cycle. This removes one cycle from each 4-row projection tile invocation while preserving the exact accumulated result.
 
-The attention output divider starts at bit 31, not bit 63. This is still exact for this datapath because the numerator is bounded by `4096 * 32768 * 16 = 2^31`, but it removes 32 idle divide iterations for each attention output element.
+The attention output divider starts at bit 31, not bit 63. This is still exact for this datapath because the numerator is bounded by `4096 * 32768 * 16 = 2^31`, but it removes 32 idle divide iterations for each attention output element. The core now runs two attention output channels for a head in parallel, with a one-cycle registered handoff into the divider numerators. This preserves the same per-channel softmax weights, weighted sums, and saturated division while halving the serial attention-value/divide passes.
 
-The active core clock is generated from the 50 MHz board clock with a 56.25 MHz PLL (`sys_pll_56_25.v`). The latest fitted slow-corner PLL-core Fmax is about 57.98 MHz with 0.529 ns setup slack at the 56.25 MHz target, so the current build is intentionally close to the timing limit and should not be raised further without another timing run and hardware validation.
+The LM-head argmax is folded into the existing LM-head projection tiles, so the core no longer burns a separate vocabulary scan before sampling. The RTL sampler caches the per-token categorical weights and pipelines the temperature/index/weight stages; this keeps the same sampled token sequence while removing the long combinational sampler path from timing.
 
-With the current programmed build, `.\run_jtag_inference.bat --steps 15 --temperature 0.5 --seed 2 --stream` reports `output_text=kamon`, `perf_cycles=12060`, and `tokens_per_sec=23321` using the Python sampler over RTL logits. The pure RTL sampler path (`--sampler rtl`) reports `output_text=ananaaaaaa`, `perf_cycles=12384`, and `tokens_per_sec=45422` for the same seed/config.
+The active core clock is generated from the 50 MHz board clock with a 56.25 MHz PLL (`sys_pll_56_25.v`). The latest fitted slow-corner PLL-core Fmax is about 57.5 MHz with 0.386 ns setup slack at the 56.25 MHz target, so the current build is intentionally close to the timing limit and should not be raised further without another timing run and hardware validation.
+
+The previous programmed build reported `.\run_jtag_inference.bat --steps 15 --temperature 0.5 --seed 2 --stream` as `output_text=kamon`, `perf_cycles=12060`, and `tokens_per_sec=23321` using the Python sampler over RTL logits. Its pure RTL sampler path (`--sampler rtl`) used a 24-bit scaled categorical cutoff over the accumulated Q12 softmax weights, instead of the earlier low-16-bit cutoff that biased strongly toward low token IDs. It reported `output_text=aariqaaaaa`, `perf_cycles=12396`, and `tokens_per_sec=45378` for the same seed/config; the 20-sample aggregate was 234 generated tokens, 285856 core cycles, and 46046 tokens/sec.
+
+In ModelSim, the RTL sampler deterministic six-step test now completes in 10,698 core cycles for the same seed/config while preserving the calibrated output tokens `10 4 11 24 13`.
 
 The separate `matrixmul_unit.sv` and `processing_element.sv` files are a standalone matrix-multiply test path and are not instantiated by `de1_soc_microgpt_rtl.sv`.
 

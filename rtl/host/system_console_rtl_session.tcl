@@ -40,7 +40,9 @@ proc mgpt_step {token pos clear poll_ms} {
         if {$status & 0x4} {
             break
         }
-        after $poll_ms
+        if {$poll_ms > 0} {
+            after $poll_ms
+        }
         incr timeout -1
     }
 
@@ -51,13 +53,13 @@ proc mgpt_step {token pos clear poll_ms} {
     }
 
     puts [format {STEP_STATUS=0x%08X} $status]
-    puts [format {STEP_RNG_STATE=0x%08X} [mgpt_read32 $::mgpt_service_path 0x14]]
     puts [format {STEP_PERF_CYCLES=%u} [mgpt_read32 $::mgpt_service_path 0xD8]]
-    puts [format {STEP_TOP_ARG=0x%08X} [mgpt_read32 $::mgpt_service_path 0x18]]
+    set logits {}
     for {set i 0} {$i < 27} {incr i} {
         set raw_logit [mgpt_read32 $::mgpt_service_path [expr {0x100 + ($i * 4)}]]
-        puts [format {STEP_LOGIT[%d]=%d} $i [mgpt_signed32 $raw_logit]]
+        lappend logits [mgpt_signed32 $raw_logit]
     }
+    puts [format {STEP_LOGITS=%s} $logits]
     puts "STEP_END=1"
     flush stdout
 }

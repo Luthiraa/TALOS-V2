@@ -54,12 +54,12 @@ localparam [5:0]
     ST_ATTN_WEIGHT      = 6'd25,
     ST_ATTN_MAX         = 6'd26,
     ST_SAMPLE_MAX       = 6'd27,
-    ST_SAMPLE_SUM       = 6'd28,
-    ST_SAMPLE_PICK      = 6'd29,
     ST_RMS0_WAIT        = 6'd30,
     ST_ATTN_RMS_WAIT    = 6'd31,
     ST_MLP_RMS_WAIT     = 6'd32,
-    ST_ATTN_DIV_WAIT    = 6'd33;
+    ST_ATTN_DIV_WAIT    = 6'd33,
+    ST_SAMPLE_SCALE     = 6'd35,
+    ST_ATTN_DIV_PREP    = 6'd36;
 
 reg [5:0] state_reg;
 reg [7:0] token_reg;
@@ -76,16 +76,12 @@ reg signed [63:0] linear_acc [0:15];
 reg signed [15:0] rms_scale_reg;
 reg signed [15:0] attn_max_reg;
 reg [31:0] attn_weight_sum_reg;
-reg [31:0] sample_weight_sum_reg;
-reg [31:0] sample_cut_reg;
-reg [31:0] sample_acc_reg;
-reg [7:0] sample_choice_reg;
-reg sample_found_reg;
 reg rms_start_reg;
 reg [63:0] rms_sumsq_reg;
-reg attn_div_start_reg;
-reg signed [63:0] attn_div_num_reg;
+reg [1:0] attn_div_start_reg;
+reg signed [63:0] attn_div_num_reg [0:1];
 reg [31:0] attn_div_den_reg;
+reg signed [63:0] attn_value_acc [0:1];
 
 reg signed [15:0] x_vec [0:15];
 reg signed [15:0] norm_vec [0:15];
@@ -123,14 +119,9 @@ reg signed [15:0] max_logit_tmp;
 reg signed [15:0] max_score_tmp;
 reg signed [31:0] delta_tmp;
 reg [31:0] weight_tmp;
-reg [31:0] weight_sum_tmp;
-reg [31:0] sample_cut_tmp;
-reg [31:0] sample_acc_tmp;
-reg [31:0] rng_tmp;
-reg [7:0] token_choice_tmp;
 reg [7:0] best_token_tmp;
-reg sample_found_tmp;
 reg systolic_start_reg;
+reg sampler_start_reg;
 
 reg signed [15:0] systolic_vector_value;
 reg signed [(4*16)-1:0] systolic_weights_flat;
@@ -141,9 +132,12 @@ wire signed [(4*64)-1:0] systolic_result_flat;
 wire rms_busy;
 wire rms_done;
 wire signed [15:0] rms_scale_out;
-wire attn_div_busy;
-wire attn_div_done;
-wire signed [15:0] attn_div_quotient;
+wire [1:0] attn_div_busy;
+wire [1:0] attn_div_done;
+wire signed [15:0] attn_div_quotient [0:1];
+wire sampler_busy;
+wire sampler_done;
+wire [7:0] sampler_next_token;
 
 systolic_matvec16_tile #(
     .DATA_WIDTH(16),
@@ -170,15 +164,37 @@ rms_scale_engine rms_scale_inst (
     .scale_q12(rms_scale_out)
 );
 
-sat_div16_engine attn_div_inst (
+genvar div_idx;
+generate
+    for (div_idx = 0; div_idx < 2; div_idx = div_idx + 1) begin : GEN_ATTN_DIV
+        sat_div16_engine attn_div_inst (
+            .clk(clk),
+            .resetn(resetn),
+            .start(attn_div_start_reg[div_idx]),
+            .numerator(attn_div_num_reg[div_idx]),
+            .denominator(attn_div_den_reg),
+            .busy(attn_div_busy[div_idx]),
+            .done(attn_div_done[div_idx]),
+            .quotient(attn_div_quotient[div_idx])
+        );
+    end
+endgenerate
+
+
+microgpt_categorical_sampler #(
+    .VOCAB_SIZE(VOCAB_SIZE)
+) sampler_inst (
     .clk(clk),
     .resetn(resetn),
-    .start(attn_div_start_reg),
-    .numerator(attn_div_num_reg),
-    .denominator(attn_div_den_reg),
-    .busy(attn_div_busy),
-    .done(attn_div_done),
-    .quotient(attn_div_quotient)
+    .start(sampler_start_reg),
+    .temperature_q8_8(temperature_q8_8),
+    .rng_state(rng_state_out),
+    .argmax_token(argmax_token),
+    .top_logit_q12(top_logit_q12),
+    .logits_flat(logits_flat),
+    .busy(sampler_busy),
+    .done(sampler_done),
+    .next_token(sampler_next_token)
 );
 
 initial begin
@@ -367,20 +383,6 @@ function [31:0] exp_neg_q12;
     end
 endfunction
 
-function signed [31:0] apply_temperature_delta;
-    input signed [31:0] delta_q12;
-    input [15:0] temp_q8_8;
-    begin
-        apply_temperature_delta = delta_q12;
-        if (temp_q8_8 <= 16'd128)
-            apply_temperature_delta = delta_q12 <<< 1;
-        else if (temp_q8_8 > 16'd256 && temp_q8_8 <= 16'd512)
-            apply_temperature_delta = delta_q12 >>> 1;
-        else if (temp_q8_8 > 16'd512)
-            apply_temperature_delta = delta_q12 >>> 2;
-    end
-endfunction
-
 generate
     for (logits_idx = 0; logits_idx < VOCAB_SIZE; logits_idx = logits_idx + 1) begin : GEN_LOGITS_FLAT
         assign logits_flat[(logits_idx*16) +: 16] = logits[logits_idx];
@@ -400,18 +402,13 @@ always @(posedge clk) begin
         acc_reg <= 64'sd0;
         sumsq_reg <= 64'sd0;
         systolic_start_reg <= 1'b0;
+        sampler_start_reg <= 1'b0;
         rms_start_reg <= 1'b0;
-        attn_div_start_reg <= 1'b0;
+        attn_div_start_reg <= 2'd0;
         rms_scale_reg <= 16'sd0;
         attn_max_reg <= 16'sd0;
         attn_weight_sum_reg <= 32'd0;
-        sample_weight_sum_reg <= 32'd0;
-        sample_cut_reg <= 32'd0;
-        sample_acc_reg <= 32'd0;
-        sample_choice_reg <= 8'd0;
-        sample_found_reg <= 1'b0;
         rms_sumsq_reg <= 64'd0;
-        attn_div_num_reg <= 64'sd0;
         attn_div_den_reg <= 32'd0;
         busy <= 1'b0;
         done <= 1'b0;
@@ -434,6 +431,10 @@ always @(posedge clk) begin
             logits[i] <= 16'sd0;
         for (i = 0; i < 16; i = i + 1)
             linear_acc[i] <= 64'sd0;
+        for (i = 0; i < 2; i = i + 1) begin
+            attn_div_num_reg[i] <= 64'sd0;
+            attn_value_acc[i] <= 64'sd0;
+        end
         for (i = 0; i < 16; i = i + 1) begin
             attn_scores[i] <= 16'sd0;
             for (j = 0; j < EMBED_DIM; j = j + 1) begin
@@ -444,8 +445,9 @@ always @(posedge clk) begin
     end else begin
         done <= 1'b0;
         systolic_start_reg <= 1'b0;
+        sampler_start_reg <= 1'b0;
         rms_start_reg <= 1'b0;
-        attn_div_start_reg <= 1'b0;
+        attn_div_start_reg <= 2'd0;
         case (state_reg)
             ST_IDLE: begin
                 busy <= 1'b0;
@@ -631,11 +633,16 @@ always @(posedge clk) begin
                     ($signed(q_vec[head_reg * HEAD_DIM + 1]) * $signed(k_cache[time_reg][head_reg * HEAD_DIM + 1])) +
                     ($signed(q_vec[head_reg * HEAD_DIM + 2]) * $signed(k_cache[time_reg][head_reg * HEAD_DIM + 2])) +
                     ($signed(q_vec[head_reg * HEAD_DIM + 3]) * $signed(k_cache[time_reg][head_reg * HEAD_DIM + 3]));
-                attn_scores[time_reg] <= sat16((acc_next >>> FRAC_BITS) >>> 1);
+                value16 = sat16((acc_next >>> FRAC_BITS) >>> 1);
+                attn_scores[time_reg] <= value16;
+                if (time_reg == 5'd0 || value16 > attn_max_reg)
+                    attn_max_reg <= value16;
                 acc_reg <= 64'sd0;
                 col_reg <= 7'd0;
                 if (time_reg == pos_reg[4:0]) begin
-                    state_reg <= ST_ATTN_SOFT;
+                    attn_weight_sum_reg <= 32'd0;
+                    time_reg <= 5'd0;
+                    state_reg <= ST_ATTN_SUM;
                 end else begin
                     time_reg <= time_reg + 5'd1;
                 end
@@ -677,6 +684,8 @@ always @(posedge clk) begin
                     col_reg <= 7'd0;
                     time_reg <= 5'd0;
                     acc_reg <= 64'sd0;
+                    for (i = 0; i < 2; i = i + 1)
+                        attn_value_acc[i] <= 64'sd0;
                     state_reg <= ST_ATTN_WEIGHT;
                 end else begin
                     time_reg <= time_reg + 5'd1;
@@ -686,36 +695,51 @@ always @(posedge clk) begin
             ST_ATTN_WEIGHT: begin
                 delta_tmp = $signed(attn_scores[time_reg]) - $signed(attn_max_reg);
                 weight_tmp = exp_neg_q12(delta_tmp);
-                acc_next = acc_reg + ($signed({1'b0, weight_tmp[30:0]}) * $signed(v_cache[time_reg][head_reg * HEAD_DIM + col_reg]));
                 if (time_reg == pos_reg[4:0]) begin
-                    attn_div_num_reg <= acc_next;
+                    for (i = 0; i < 2; i = i + 1) begin
+                        attn_value_acc[i] <= attn_value_acc[i] +
+                            ($signed({1'b0, weight_tmp[30:0]}) * $signed(v_cache[time_reg][head_reg * HEAD_DIM + col_reg + i]));
+                    end
                     attn_div_den_reg <= attn_weight_sum_reg;
                     acc_reg <= 64'sd0;
                     time_reg <= 5'd0;
-                    state_reg <= ST_ATTN_DIV_WAIT;
+                    state_reg <= ST_ATTN_DIV_PREP;
                 end else begin
-                    acc_reg <= acc_next;
+                    for (i = 0; i < 2; i = i + 1) begin
+                        attn_value_acc[i] <= attn_value_acc[i] +
+                            ($signed({1'b0, weight_tmp[30:0]}) * $signed(v_cache[time_reg][head_reg * HEAD_DIM + col_reg + i]));
+                    end
                     time_reg <= time_reg + 5'd1;
                 end
             end
 
+            ST_ATTN_DIV_PREP: begin
+                for (i = 0; i < 2; i = i + 1)
+                    attn_div_num_reg[i] <= attn_value_acc[i];
+                state_reg <= ST_ATTN_DIV_WAIT;
+            end
+
             ST_ATTN_DIV_WAIT: begin
-                if (!attn_div_busy && !attn_div_done)
-                    attn_div_start_reg <= 1'b1;
-                if (attn_div_done) begin
-                    x_attn[head_reg * HEAD_DIM + col_reg] <= attn_div_quotient;
-                    if (col_reg == HEAD_DIM - 1) begin
+                if (!(|attn_div_busy) && !(|attn_div_done))
+                    attn_div_start_reg <= 2'b11;
+                if (&attn_div_done) begin
+                    for (i = 0; i < 2; i = i + 1)
+                        x_attn[head_reg * HEAD_DIM + col_reg + i] <= attn_div_quotient[i];
+                    if (col_reg == HEAD_DIM - 2) begin
                         col_reg <= 7'd0;
                         if (head_reg == N_HEAD - 1) begin
                             row_reg <= 7'd0;
-                            col_reg <= 7'd0;
                             state_reg <= ST_ATTN_WO;
                         end else begin
                             head_reg <= head_reg + 2'd1;
+                            time_reg <= 5'd0;
                             state_reg <= ST_ATTN_DOT;
                         end
                     end else begin
-                        col_reg <= col_reg + 7'd1;
+                        col_reg <= col_reg + 7'd2;
+                        time_reg <= 5'd0;
+                        for (i = 0; i < 2; i = i + 1)
+                            attn_value_acc[i] <= 64'sd0;
                         state_reg <= ST_ATTN_WEIGHT;
                     end
                 end
@@ -847,6 +871,8 @@ always @(posedge clk) begin
                 if (idx_reg == EMBED_DIM - 1) begin
                     row_reg <= 7'd0;
                     col_reg <= 7'd0;
+                    top_logit_q12 <= 16'sh8000;
+                    argmax_token <= 8'd0;
                     state_reg <= ST_LM_HEAD;
                 end else begin
                     idx_reg <= idx_reg + 4'd1;
@@ -857,12 +883,28 @@ always @(posedge clk) begin
                 if (!systolic_busy && !systolic_done)
                     systolic_start_reg <= 1'b1;
                 if (systolic_done) begin
+                    max_logit_tmp = top_logit_q12;
+                    best_token_tmp = argmax_token;
                     for (i = 0; i < 4; i = i + 1) begin
-                        if ((row_reg + i) < VOCAB_SIZE)
-                            logits[row_reg + i] <= sat16($signed(systolic_result_flat[(i*64) +: 64]) >>> FRAC_BITS);
+                        if ((row_reg + i) < VOCAB_SIZE) begin
+                            value16 = sat16($signed(systolic_result_flat[(i*64) +: 64]) >>> FRAC_BITS);
+                            logits[row_reg + i] <= value16;
+                            if (value16 > max_logit_tmp) begin
+                                max_logit_tmp = value16;
+                                best_token_tmp = row_reg + i;
+                            end
+                        end
                     end
+                    top_logit_q12 <= max_logit_tmp;
+                    argmax_token <= best_token_tmp;
                     if (row_reg == 7'd24) begin
-                        state_reg <= ST_SAMPLE;
+                        if (sample_mode) begin
+                            sampler_start_reg <= 1'b1;
+                            state_reg <= ST_SAMPLE_SCALE;
+                        end else begin
+                            next_token <= best_token_tmp;
+                            state_reg <= ST_DONE;
+                        end
                     end else begin
                         row_reg <= row_reg + 7'd4;
                     end
@@ -887,9 +929,8 @@ always @(posedge clk) begin
                 argmax_token <= best_token_tmp;
                 if (row_reg == VOCAB_SIZE - 1) begin
                     if (sample_mode) begin
-                        sample_weight_sum_reg <= 32'd0;
-                        row_reg <= 7'd0;
-                        state_reg <= ST_SAMPLE_SUM;
+                        sampler_start_reg <= 1'b1;
+                        state_reg <= ST_SAMPLE_SCALE;
                     end else begin
                         next_token <= best_token_tmp;
                         state_reg <= ST_DONE;
@@ -899,48 +940,10 @@ always @(posedge clk) begin
                 end
             end
 
-            ST_SAMPLE_SUM: begin
-                delta_tmp = apply_temperature_delta($signed(logits[row_reg]) - $signed(top_logit_q12), temperature_q8_8);
-                weight_tmp = exp_neg_q12(delta_tmp);
-                if (row_reg == VOCAB_SIZE - 1) begin
-                    weight_sum_tmp = sample_weight_sum_reg + weight_tmp;
-                    if (weight_sum_tmp == 32'd0)
-                        weight_sum_tmp = 32'd1;
-                    sample_weight_sum_reg <= weight_sum_tmp;
-                    rng_tmp = rng_state_out;
-                    sample_cut_tmp = {16'd0, rng_tmp[15:0]};
-                    if (sample_cut_tmp >= weight_sum_tmp)
-                        sample_cut_tmp = sample_cut_tmp - weight_sum_tmp;
-                    sample_cut_reg <= sample_cut_tmp;
-                    sample_acc_reg <= 32'd0;
-                    sample_choice_reg <= argmax_token;
-                    sample_found_reg <= 1'b0;
-                    row_reg <= 7'd0;
-                    state_reg <= ST_SAMPLE_PICK;
-                end else begin
-                    sample_weight_sum_reg <= sample_weight_sum_reg + weight_tmp;
-                    row_reg <= row_reg + 7'd1;
-                end
-            end
-
-            ST_SAMPLE_PICK: begin
-                delta_tmp = apply_temperature_delta($signed(logits[row_reg]) - $signed(top_logit_q12), temperature_q8_8);
-                weight_tmp = exp_neg_q12(delta_tmp);
-                sample_acc_tmp = sample_acc_reg + weight_tmp;
-                token_choice_tmp = sample_choice_reg;
-                sample_found_tmp = sample_found_reg;
-                if (!sample_found_tmp && (sample_acc_tmp > sample_cut_reg)) begin
-                    token_choice_tmp = {1'b0, row_reg};
-                    sample_found_tmp = 1'b1;
-                end
-                sample_acc_reg <= sample_acc_tmp;
-                sample_choice_reg <= token_choice_tmp;
-                sample_found_reg <= sample_found_tmp;
-                if (row_reg == VOCAB_SIZE - 1) begin
-                    next_token <= token_choice_tmp;
+            ST_SAMPLE_SCALE: begin
+                if (sampler_done) begin
+                    next_token <= sampler_next_token;
                     state_reg <= ST_DONE;
-                end else begin
-                    row_reg <= row_reg + 7'd1;
                 end
             end
 

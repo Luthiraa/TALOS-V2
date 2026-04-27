@@ -102,7 +102,7 @@ def sample_from_logits_q12_xorshift(logits_q12: list[int], temperature: float, s
         best_token = max(range(len(logits_q12)), key=lambda idx: logits_q12[idx])
         return best_token, state & 0xFFFFFFFF
 
-    scaled = [value / temperature for value in logits_q12]
+    scaled = [(value / 4096.0) / temperature for value in logits_q12]
     probs = softmax(scaled)
     state = xorshift32(state)
     threshold = (state & 0xFFFFFF) / float(1 << 24)
@@ -340,6 +340,12 @@ class SystemConsoleSession:
             if line.startswith("STEP_TOP_ARG="):
                 result["top_arg_word"] = int(parse_value(line), 0) & 0xFFFFFFFF
                 continue
+            if line.startswith("STEP_LOGITS="):
+                logits = [decode_signed32(int(value, 0)) for value in parse_value(line).split()]
+                if len(logits) != VOCAB_SIZE:
+                    raise SystemExit(f"unexpected logit count from system-console: {len(logits)}")
+                result["logits_q12"] = logits
+                continue
             parsed = parse_indexed_assignment(line, "STEP_LOGIT")
             if parsed is not None:
                 idx, value = parsed
@@ -509,7 +515,7 @@ def main() -> int:
     parser.add_argument("--count", type=int, default=1)
     parser.add_argument("--temperature", type=float, default=0.5)
     parser.add_argument("--seed", type=int, default=1)
-    parser.add_argument("--poll-ms", type=int, default=5)
+    parser.add_argument("--poll-ms", type=int, default=0)
     parser.add_argument("--stream", action="store_true")
     parser.add_argument("--verbose", action="store_true")
     parser.add_argument("--sampler", choices=("python", "python-xorshift", "rtl"), default="python")
@@ -523,6 +529,8 @@ def main() -> int:
         raise SystemExit("--count must be at least 1")
     if args.temperature <= 0.0:
         raise SystemExit("--temperature must be greater than 0")
+    if args.poll_ms < 0:
+        raise SystemExit("--poll-ms must be non-negative")
 
     names_path = Path(args.names)
     if not names_path.is_absolute():
@@ -551,7 +559,7 @@ def main() -> int:
             count=args.count,
             temperature=args.temperature,
             poll_ms=args.poll_ms,
-            stream_tokens=args.stream and args.count == 1,
+            stream_tokens=args.stream,
             verbose=args.verbose and args.count > 1,
             docs=docs,
             itos=itos,
@@ -565,7 +573,7 @@ def main() -> int:
             temperature=args.temperature,
             seed=args.seed,
             poll_ms=args.poll_ms,
-            stream_tokens=args.stream and args.count == 1,
+            stream_tokens=args.stream,
             verbose=args.verbose and args.count > 1,
             itos=itos,
         )

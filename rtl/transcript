@@ -1,33 +1,31 @@
 # vsim -c work_microgpt_core.tb_microgpt_core -do "run -all; quit -f" 
-# Start time: 11:58:21 on Apr 24,2026
+# Start time: 13:35:42 on Apr 27,2026
 # Loading sv_std.std
 # Loading work_microgpt_core.tb_microgpt_core
 # Loading work_microgpt_core.microgpt_exact_core
 # Loading work_microgpt_core.systolic_matvec16_tile
 # Loading work_microgpt_core.rms_scale_engine
+# Loading work_microgpt_core.microgpt_categorical_sampler
 # Loading work_microgpt_core.sat_div16_engine
-# ** Warning: (vsim-3017) tb_microgpt_core.sv(30): [TFMPC] - Too few port connections. Expected 16, found 15.
-#    Time: 0 ps  Iteration: 0  Instance: /tb_microgpt_core/dut File: microgpt_exact_core.sv
-# ** Warning: (vsim-3722) tb_microgpt_core.sv(30): [TFMPC] - Missing connection for port 'logits_flat'.
 # run -all
 # Run A, seed=2
-# step pos=0 in=26 out=0 argmax=0 seed_out=0x00084042 top_logit=4199 cycles=1994
-# step pos=1 in=0 out=13 argmax=13 seed_out=0x08008c02 top_logit=6991 cycles=2022
-# step pos=2 in=13 out=0 argmax=0 seed_out=0x2998d882 top_logit=6134 cycles=2050
-# step pos=3 in=0 out=13 argmax=13 seed_out=0x6398b906 top_logit=4113 cycles=2078
-# step pos=4 in=13 out=0 argmax=26 seed_out=0xe3b0281a top_logit=8432 cycles=2106
-# step pos=5 in=0 out=26 argmax=26 seed_out=0x30d07323 top_logit=13161 cycles=2134
+# step pos=0 in=26 out=10 argmax=0 seed_out=0x00084042 top_logit=4199 cycles=1743
+# step pos=1 in=10 out=4 argmax=0 seed_out=0x08008c02 top_logit=11250 cycles=1759
+# step pos=2 in=4 out=11 argmax=17 seed_out=0x2998d882 top_logit=5169 cycles=1775
+# step pos=3 in=11 out=24 argmax=8 seed_out=0x6398b906 top_logit=7120 cycles=1791
+# step pos=4 in=24 out=13 argmax=0 seed_out=0xe3b0281a top_logit=7104 cycles=1807
+# step pos=5 in=13 out=26 argmax=26 seed_out=0x30d07323 top_logit=11863 cycles=1823
 # Run B, seed=2
-# step pos=0 in=26 out=0 argmax=0 seed_out=0x00084042 top_logit=4199 cycles=1994
-# step pos=1 in=0 out=13 argmax=13 seed_out=0x08008c02 top_logit=6991 cycles=2022
-# step pos=2 in=13 out=0 argmax=0 seed_out=0x2998d882 top_logit=6134 cycles=2050
-# step pos=3 in=0 out=13 argmax=13 seed_out=0x6398b906 top_logit=4113 cycles=2078
-# step pos=4 in=13 out=0 argmax=26 seed_out=0xe3b0281a top_logit=8432 cycles=2106
-# step pos=5 in=0 out=26 argmax=26 seed_out=0x30d07323 top_logit=13161 cycles=2134
-# RTL deterministic output tokens: 0 13 0 13 0
+# step pos=0 in=26 out=10 argmax=0 seed_out=0x00084042 top_logit=4199 cycles=1743
+# step pos=1 in=10 out=4 argmax=0 seed_out=0x08008c02 top_logit=11250 cycles=1759
+# step pos=2 in=4 out=11 argmax=17 seed_out=0x2998d882 top_logit=5169 cycles=1775
+# step pos=3 in=11 out=24 argmax=8 seed_out=0x6398b906 top_logit=7120 cycles=1791
+# step pos=4 in=24 out=13 argmax=0 seed_out=0xe3b0281a top_logit=7104 cycles=1807
+# step pos=5 in=13 out=26 argmax=26 seed_out=0x30d07323 top_logit=11863 cycles=1823
+# RTL deterministic output tokens: 10 4 11 24 13
 # Karpathy exact first sample tokens are 10 0 12 14 13 26 (kamon).
 # PASS: RTL core is deterministic for repeated seed/config.
-# ** Note: $finish    : tb_microgpt_core.sv(186)
-#    Time: 247935 ns  Iteration: 1  Instance: /tb_microgpt_core
-# End time: 11:58:22 on Apr 24,2026, Elapsed time: 0:00:01
-# Errors: 0, Warnings: 2
+# ** Note: $finish    : tb_microgpt_core.sv(188)
+#    Time: 214215 ns  Iteration: 1  Instance: /tb_microgpt_core
+# End time: 13:35:42 on Apr 27,2026, Elapsed time: 0:00:00
+# Errors: 0, Warnings: 0

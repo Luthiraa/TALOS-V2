@@ -1,0 +1,154 @@
+m255
+K4
+z2
+13
+!s112 1.1
+!i10d 8192
+!i10e 25
+!i10f 100
+cModel Technology
+Z0 dC:/Users/luthi/Documents/TALOS-V2/rtl
+vmicrogpt_categorical_sampler
+Z1 DXx6 sv_std 3 std 0 22 AD7iAPLo6nTIKk<N0eo=D3
+Z2 !s110 1777311341
+!i10b 1
+!s100 JB^G5R_8V]m5AKI7:h1B@0
+I<`0TT2aFC^PYTTAY=VAfi3
+Z3 VDg1SIo80bB@j0V0VzS_@n1
+!s105 microgpt_categorical_sampler_sv_unit
+S1
+R0
+w1777307807
+8microgpt_categorical_sampler.sv
+Fmicrogpt_categorical_sampler.sv
+L0 1
+Z4 OV;L;10.5b;63
+r1
+!s85 0
+31
+Z5 !s108 1777311341.000000
+Z6 !s107 tb_microgpt_core.sv|microgpt_exact_core.sv|microgpt_categorical_sampler.sv|sat_div16_engine.sv|rms_scale_engine.sv|systolic_matvec16_tile.sv|
+Z7 !s90 -sv|-work|work_microgpt_core|systolic_matvec16_tile.sv|rms_scale_engine.sv|sat_div16_engine.sv|microgpt_categorical_sampler.sv|microgpt_exact_core.sv|tb_microgpt_core.sv|
+!i113 1
+Z8 o-sv -work work_microgpt_core
+Z9 tCvgOpt 0
+vmicrogpt_exact_core
+R1
+R2
+!i10b 1
+!s100 ?z;UeVWH8fT8@INR5@BfJ3
+IoS;[]fYWH4>jGd`;79I1U3
+R3
+!s105 microgpt_exact_core_sv_unit
+S1
+R0
+w1777311336
+8microgpt_exact_core.sv
+Fmicrogpt_exact_core.sv
+L0 1
+R4
+r1
+!s85 0
+31
+R5
+R6
+R7
+!i113 1
+R8
+R9
+vrms_scale_engine
+R1
+R2
+!i10b 1
+!s100 XXUe;KUMkhcklLJ04cnJg0
+I0=AjQWE:K6WL>=F6:ZJY:0
+R3
+!s105 rms_scale_engine_sv_unit
+S1
+R0
+w1776954045
+8rms_scale_engine.sv
+Frms_scale_engine.sv
+L0 1
+R4
+r1
+!s85 0
+31
+R5
+R6
+R7
+!i113 1
+R8
+R9
+vsat_div16_engine
+R1
+R2
+!i10b 1
+!s100 `5InWLic3JE8ZQ@B?3BYm1
+IMV@]m;VMX:UES_hFBjMEe1
+R3
+!s105 sat_div16_engine_sv_unit
+S1
+R0
+w1776997226
+8sat_div16_engine.sv
+Fsat_div16_engine.sv
+L0 1
+R4
+r1
+!s85 0
+31
+R5
+R6
+R7
+!i113 1
+R8
+R9
+vsystolic_matvec16_tile
+R1
+R2
+!i10b 1
+!s100 MWN=0[ddaD8=WCXN;[a2`3
+I0]5U;S72;=jS36^ToN=`z0
+R3
+!s105 systolic_matvec16_tile_sv_unit
+S1
+R0
+w1776997221
+8systolic_matvec16_tile.sv
+Fsystolic_matvec16_tile.sv
+L0 1
+R4
+r1
+!s85 0
+31
+R5
+R6
+R7
+!i113 1
+R8
+R9
+vtb_microgpt_core
+R1
+R2
+!i10b 1
+!s100 gAS89MG6N9QJa_G;L9;nj2
+IZfNGQigTNe<Y0]k@G=CHz2
+R3
+!s105 tb_microgpt_core_sv_unit
+S1
+R0
+w1777229924
+8tb_microgpt_core.sv
+Ftb_microgpt_core.sv
+L0 3
+R4
+r1
+!s85 0
+31
+R5
+R6
+R7
+!i113 1
+R8
+R9

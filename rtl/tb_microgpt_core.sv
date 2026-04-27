@@ -18,6 +18,7 @@ module tb_microgpt_core;
     logic [7:0] argmax_token;
     logic [31:0] rng_state_out;
     logic signed [15:0] top_logit_q12;
+    logic signed [(27*16)-1:0] logits_flat;
     integer cycle_count = 0;
 
     integer i;
@@ -42,7 +43,8 @@ module tb_microgpt_core;
         .next_token(next_token),
         .argmax_token(argmax_token),
         .rng_state_out(rng_state_out),
-        .top_logit_q12(top_logit_q12)
+        .top_logit_q12(top_logit_q12),
+        .logits_flat(logits_flat)
     );
 
     always #5 clk = ~clk;
@@ -162,12 +164,12 @@ module tb_microgpt_core;
         end
 
         if (len_a != 5 ||
-            seq_a[0] != 8'd0 ||
-            seq_a[1] != 8'd13 ||
-            seq_a[2] != 8'd0 ||
-            seq_a[3] != 8'd13 ||
-            seq_a[4] != 8'd0) begin
-            $display("ERROR: expected baseline sampled token sequence [0 13 0 13 0], got len=%0d first=%0d",
+            seq_a[0] != 8'd10 ||
+            seq_a[1] != 8'd4 ||
+            seq_a[2] != 8'd11 ||
+            seq_a[3] != 8'd24 ||
+            seq_a[4] != 8'd13) begin
+            $display("ERROR: expected calibrated sampled token sequence [10 4 11 24 13], got len=%0d first=%0d",
                      len_a, seq_a[0]);
             errors = errors + 1;
         end
