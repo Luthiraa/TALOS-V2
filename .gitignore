@@ -1,44 +1,13 @@
-# Quartus / FPGA build outputs
-**/db/
-**/incremental_db/
-**/quartus/
-**/reports/
-**/*.rpt
-**/*.summary
-**/*.smsg
-**/*.done
-**/*.pin
-**/*.sof
-**/*.pof
-**/*.jdi
-**/*.sld
-
-# Generated Platform Designer / Qsys outputs
-**/jtag_counter_bridge/
-!**/jtag_counter_bridge.qsys
-!**/jtag_counter_bridge.sopcinfo
-
-# Generated HLS project output
-**/hls_leds_fpga.prj/
-**/components/
-
-# Keep source HLS/top-level project files and scripts
-!hls_leds_fpga.prj/
-!hls_leds_fpga.prj/*.cpp
-!hls_leds_fpga.prj/*.v
-!hls_leds_fpga.prj/*.qsf
-!hls_leds_fpga.prj/*.qpf
-!hls_leds_fpga.prj/*.sdc
-!hls_leds_fpga.prj/*.qsys
-!hls_leds_fpga.prj/*.sopcinfo
-!hls_leds_fpga.prj/*.tcl
-!hls_leds_fpga.prj/*.bat
-!hls_leds_fpga.prj/*.ps1
-!hls_leds_fpga.prj/*.txt
-
-# OS/editor noise
-*.log
-*.tmp
-*.bak
-Thumbs.db
-Desktop.ini
+.DS_Store
+.idea
+*.vcd
+*.fst
+*.fst.hier
+runs
+tt_submission
+src/user_config.json
+src/config_merged.json
+test/sim_build
+test/__pycache__/
+test/results.xml
+test/gate_level_netlist.v
