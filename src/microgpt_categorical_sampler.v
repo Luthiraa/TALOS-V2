@@ -37,7 +37,7 @@ reg [7:0] choice_reg;
 reg found_reg;
 reg [31:0] sample_weight [0:VOCAB_SIZE-1];
 reg [31:0] weight_pipe_reg;
-reg [31:0] fine_index_reg;
+reg [7:0] fine_index_reg;
 reg delta_nonneg_reg;
 reg sum_last_reg;
 
@@ -56,9 +56,8 @@ integer i;
 
 wire signed [15:0] current_logit =
     logits_flat[(row_reg * 16) +: 16];
-wire [31:0] mixed_rng_full = rng_state * 32'h000149FB;
-wire [55:0] scaled_cut_full = {24'd0, mixed_rng_reg} * weight_sum_reg;
-wire [31:0] scaled_cut_value = scaled_cut_full[55:24];
+wire [23:0] mixed_rng_value = (rng_state * 32'h000149FB) >> 8;
+wire [31:0] scaled_cut_value = ({8'd0, mixed_rng_reg} * weight_sum_reg) >> 24;
 
 function automatic signed [31:0] apply_temperature_delta;
     input signed [31:0] delta_q12;
@@ -117,13 +116,13 @@ endfunction
 always @(posedge clk) begin
     if (!resetn) begin
         state_reg <= ST_IDLE;
-        row_reg <= 7'd0;
-        sum_row_reg <= 7'd0;
+        row_reg <= 5'd0;
+        sum_row_reg <= 5'd0;
         weight_sum_reg <= 32'd0;
         cut_reg <= 32'd0;
         acc_reg <= 32'd0;
-        mixed_rng_reg <= 32'd0;
-        scaled_cut_reg <= 64'd0;
+        mixed_rng_reg <= 24'd0;
+        scaled_cut_reg <= 32'd0;
         choice_reg <= 8'd0;
         found_reg <= 1'b0;
         weight_pipe_reg <= 32'd0;
@@ -142,8 +141,8 @@ always @(posedge clk) begin
             ST_IDLE: begin
                 busy <= 1'b0;
                 if (start) begin
-                    row_reg <= 7'd0;
-                    sum_row_reg <= 7'd0;
+                    row_reg <= 5'd0;
+                    sum_row_reg <= 5'd0;
                     weight_sum_reg <= 32'd0;
                     cut_reg <= 32'd0;
                     acc_reg <= 32'd0;
@@ -159,12 +158,15 @@ always @(posedge clk) begin
             end
 
             ST_SUM: begin
+                /* verilator lint_off BLKSEQ */
                 delta_tmp = apply_temperature_delta(
-                    $signed(current_logit) - $signed(top_logit_q12),
+                    $signed({{16{current_logit[15]}}, current_logit}) -
+                    $signed({{16{top_logit_q12[15]}}, top_logit_q12}),
                     temperature_q8_8
                 );
+                /* verilator lint_on BLKSEQ */
                 sum_row_reg <= row_reg;
-                sum_last_reg <= (row_reg == VOCAB_SIZE - 1);
+                sum_last_reg <= (row_reg == 5'd26);
                 if (delta_tmp >= 0) begin
                     delta_nonneg_reg <= 1'b1;
                     fine_index_reg <= 8'd0;
@@ -203,16 +205,16 @@ always @(posedge clk) begin
                 if (sum_last_reg) begin
                     if (sum_tmp == 32'd0)
                         weight_sum_reg <= 32'd1;
-                    row_reg <= 7'd0;
+                    row_reg <= 5'd0;
                     state_reg <= ST_MIX;
                 end else begin
-                    row_reg <= sum_row_reg + 7'd1;
+                    row_reg <= sum_row_reg + 5'd1;
                     state_reg <= ST_SUM;
                 end
             end
 
             ST_MIX: begin
-                mixed_rng_reg <= mixed_rng_full[31:8];
+                mixed_rng_reg <= mixed_rng_value;
                 state_reg <= ST_SCALE;
             end
 
@@ -228,7 +230,7 @@ always @(posedge clk) begin
                 acc_reg <= 32'd0;
                 choice_reg <= argmax_token;
                 found_reg <= 1'b0;
-                row_reg <= 7'd0;
+                row_reg <= 5'd0;
                 state_reg <= ST_PICK;
             end
 
@@ -239,18 +241,18 @@ always @(posedge clk) begin
                 choice_tmp = choice_reg;
                 found_tmp = found_reg;
                 if (!found_tmp && (acc_tmp > cut_reg)) begin
-                    choice_tmp = {1'b0, row_reg};
+                    choice_tmp = {3'b000, row_reg};
                     found_tmp = 1'b1;
                 end
                 /* verilator lint_on BLKSEQ */
                 acc_reg <= acc_tmp;
                 choice_reg <= choice_tmp;
                 found_reg <= found_tmp;
-                if (row_reg == VOCAB_SIZE - 1) begin
+                if (row_reg == 5'd26) begin
                     next_token <= choice_tmp;
                     state_reg <= ST_DONE;
                 end else begin
-                    row_reg <= row_reg + 7'd1;
+                    row_reg <= row_reg + 5'd1;
                 end
             end
 
