@@ -26,18 +26,18 @@ localparam [3:0]
     ST_DONE       = 4'd8;
 
 reg [3:0] state_reg;
-reg [6:0] row_reg;
-reg [6:0] sum_row_reg;
+reg [4:0] row_reg;
+reg [4:0] sum_row_reg;
 reg [31:0] weight_sum_reg;
 reg [31:0] cut_reg;
 reg [31:0] acc_reg;
-reg [31:0] mixed_rng_reg;
-reg [63:0] scaled_cut_reg;
+reg [23:0] mixed_rng_reg;
+reg [31:0] scaled_cut_reg;
 reg [7:0] choice_reg;
 reg found_reg;
 reg [31:0] sample_weight [0:VOCAB_SIZE-1];
 reg [31:0] weight_pipe_reg;
-reg [7:0] fine_index_reg;
+reg [31:0] fine_index_reg;
 reg delta_nonneg_reg;
 reg sum_last_reg;
 
@@ -56,6 +56,9 @@ integer i;
 
 wire signed [15:0] current_logit =
     logits_flat[(row_reg * 16) +: 16];
+wire [31:0] mixed_rng_full = rng_state * 32'h000149FB;
+wire [55:0] scaled_cut_full = {24'd0, mixed_rng_reg} * weight_sum_reg;
+wire [31:0] scaled_cut_value = scaled_cut_full[55:24];
 
 function automatic signed [31:0] apply_temperature_delta;
     input signed [31:0] delta_q12;
@@ -173,6 +176,7 @@ always @(posedge clk) begin
             end
 
             ST_SUM_WEIGHT: begin
+                /* verilator lint_off BLKSEQ */
                 if (delta_nonneg_reg) begin
                     weight_pipe_reg <= 32'd4096;
                 end else begin
@@ -185,12 +189,15 @@ always @(posedge clk) begin
                     if ((w0_tmp - ((diff_tmp * {30'd0, frac_index_tmp}) >>> 2)) == 32'd0)
                         weight_pipe_reg <= 32'd1;
                 end
+                /* verilator lint_on BLKSEQ */
                 state_reg <= ST_SUM_ACC;
             end
 
             ST_SUM_ACC: begin
+                /* verilator lint_off BLKSEQ */
                 weight_tmp = weight_pipe_reg;
                 sum_tmp = weight_sum_reg + weight_tmp;
+                /* verilator lint_on BLKSEQ */
                 sample_weight[sum_row_reg] <= weight_tmp;
                 weight_sum_reg <= sum_tmp;
                 if (sum_last_reg) begin
@@ -205,18 +212,18 @@ always @(posedge clk) begin
             end
 
             ST_MIX: begin
-                mixed_rng_reg <= rng_state * 32'h000149FB;
+                mixed_rng_reg <= mixed_rng_full[31:8];
                 state_reg <= ST_SCALE;
             end
 
             ST_SCALE: begin
-                scaled_cut_reg <= {40'd0, mixed_rng_reg[31:8]} * {32'd0, weight_sum_reg};
+                scaled_cut_reg <= scaled_cut_value;
                 state_reg <= ST_CUT;
             end
 
             ST_CUT: begin
-                cut_reg <= scaled_cut_reg[55:24];
-                if (scaled_cut_reg[55:24] >= weight_sum_reg)
+                cut_reg <= scaled_cut_reg;
+                if (scaled_cut_reg >= weight_sum_reg)
                     cut_reg <= weight_sum_reg - 32'd1;
                 acc_reg <= 32'd0;
                 choice_reg <= argmax_token;
@@ -226,6 +233,7 @@ always @(posedge clk) begin
             end
 
             ST_PICK: begin
+                /* verilator lint_off BLKSEQ */
                 weight_tmp = sample_weight[row_reg];
                 acc_tmp = acc_reg + weight_tmp;
                 choice_tmp = choice_reg;
@@ -234,6 +242,7 @@ always @(posedge clk) begin
                     choice_tmp = {1'b0, row_reg};
                     found_tmp = 1'b1;
                 end
+                /* verilator lint_on BLKSEQ */
                 acc_reg <= acc_tmp;
                 choice_reg <= choice_tmp;
                 found_reg <= found_tmp;

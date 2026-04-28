@@ -67,7 +67,7 @@ module tt_um_luthiraa_talos_v2_sampler (
 
     assign start_pulse = start_d & ~start_q;
 
-    always @(posedge clk or negedge rst_n) begin
+    always @(posedge clk) begin
         if (!rst_n) begin
             start_d <= 1'b0;
             start_q <= 1'b0;
