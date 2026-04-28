@@ -6,7 +6,7 @@ project:
   description:  "Tiny Tapeout wrapper around the Talos V2 RTL categorical sampler."
   language:     "Verilog"
   clock_hz:     1000000
-  tiles:        "2x2"
+  tiles:        "3x2"
   top_module:   "tt_um_luthiraa_talos_v2_sampler"
   source_files:
     - "tt_um_luthiraa_talos_v2_sampler.v"
