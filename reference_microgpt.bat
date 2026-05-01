@@ -1,6 +1,4 @@
 @echo off
-pushd "%~dp0hls\v2"
-python tools\reference_microgpt.py %*
+python "%~dp0rtl\python\karpathy_exact_reference.py" %*
 set ERR=%ERRORLEVEL%
-popd
 exit /b %ERR%

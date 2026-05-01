@@ -1,8 +1,0 @@
-{"name":"Info","rows":[
-{"name":"Project Name","data":["./hls_leds_fpga"],"classes":["info-table"]},
-{"name":"Target Family, Device","data":["Cyclone V, 5CEFA9F23I7"]},
-{"name":"i++ Version","data":["18.1.0 Build 625"]},
-{"name":"Quartus Version","data":["18.1.0 Build 625"]},
-{"name":"Command","data":["i++ -march=CycloneV -IC:\\intelFPGA\\18.1\\modelsim_ase\\gcc-4.2.1-mingw32vc12\\include -IC:\\intelFPGA\\18.1\\modelsim_ase\\gcc-4.2.1-mingw32vc12\\lib\\gcc\\mingw32\\4.2.1\\include hls_leds.cpp -o hls_leds_fpga.exe --simulator none"]},
-{"name":"Reports Generated At", "data":["Sat Mar 14 14:14:24 2026"]}
-]}

@@ -1,6 +1,6 @@
 @echo off
 pushd "%~dp0rtl"
-python python\jtag_rtl_infer.py %*
+vsim -c -do "do sim/testbench_core.tcl"
 set ERR=%ERRORLEVEL%
 popd
 exit /b %ERR%

@@ -155,7 +155,7 @@ int main(int argc, char **argv) {
 
     char command[4096];
     snprintf(command, sizeof(command),
-             "cd /d \"C:\\\\Users\\\\luthi\\\\Documents\\\\TALOS-V2\\\\rtl\" && "
+             "cd /d \"rtl\" && "
              "\"C:\\\\intelFPGA\\\\18.1\\\\quartus\\\\sopc_builder\\\\bin\\\\system-console.exe\" "
              "-cli -disable_readline < \"%s\"",
              tcl_path);

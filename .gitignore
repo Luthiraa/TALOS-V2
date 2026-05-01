@@ -1,5 +1,6 @@
 .DS_Store
 .idea
+.vscode/
 *.vcd
 *.fst
 *.fst.hier
@@ -11,3 +12,20 @@ test/sim_build
 test/__pycache__/
 test/results.xml
 test/gate_level_netlist.v
+
+# Python caches
+__pycache__/
+*.py[cod]
+
+# FPGA/simulation generated output
+transcript
+work_*/
+db/
+incremental_db/
+*.rpt
+*.summary
+*.smsg
+*.done
+*.sof
+*.sld
+*.jdi

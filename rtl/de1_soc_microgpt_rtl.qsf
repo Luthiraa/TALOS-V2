@@ -3,15 +3,16 @@ set_global_assignment -name DEVICE 5CSEMA5F31C6
 set_global_assignment -name TOP_LEVEL_ENTITY de1_soc_microgpt_rtl
 set_global_assignment -name NUM_PARALLEL_PROCESSORS 1
 
-set_global_assignment -name SYSTEMVERILOG_FILE de1_soc_microgpt_rtl.sv
-set_global_assignment -name SYSTEMVERILOG_FILE microgpt_categorical_sampler.sv
-set_global_assignment -name SYSTEMVERILOG_FILE microgpt_exact_core.sv
-set_global_assignment -name SYSTEMVERILOG_FILE rms_scale_engine.sv
-set_global_assignment -name SYSTEMVERILOG_FILE sat_div16_engine.sv
-set_global_assignment -name SYSTEMVERILOG_FILE systolic_matvec16_tile.sv
-set_global_assignment -name VERILOG_FILE sys_pll_56_25.v
+set_global_assignment -name SEARCH_PATH src/include
+set_global_assignment -name SYSTEMVERILOG_FILE src/de1_soc_microgpt_rtl.sv
+set_global_assignment -name SYSTEMVERILOG_FILE src/microgpt_categorical_sampler.sv
+set_global_assignment -name SYSTEMVERILOG_FILE src/microgpt_exact_core.sv
+set_global_assignment -name SYSTEMVERILOG_FILE src/rms_scale_engine.sv
+set_global_assignment -name SYSTEMVERILOG_FILE src/sat_div16_engine.sv
+set_global_assignment -name SYSTEMVERILOG_FILE src/systolic_matvec16_tile.sv
+set_global_assignment -name VERILOG_FILE src/sys_pll_56_25.v
 set_global_assignment -name SDC_FILE de1_soc_microgpt_rtl.sdc
-set_global_assignment -name QIP_FILE ../hls/v2/jtag_microgpt_bridge/synthesis/jtag_microgpt_bridge.qip
+set_global_assignment -name QIP_FILE ip/jtag_microgpt_bridge/synthesis/jtag_microgpt_bridge.qip
 set_global_assignment -name FITTER_EFFORT "STANDARD FIT"
 
 set_location_assignment PIN_AF14 -to CLOCK_50

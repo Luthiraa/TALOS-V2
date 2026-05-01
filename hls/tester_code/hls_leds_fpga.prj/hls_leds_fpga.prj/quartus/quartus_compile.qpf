@@ -1,3 +1,0 @@
-# This Quartus project file sets up a project to measure the area and fmax of
-# your components in a full Quartus compilation for the targeted device
-PROJECT_REVISION = quartus_compile
