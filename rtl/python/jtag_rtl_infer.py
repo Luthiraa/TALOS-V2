@@ -308,6 +308,12 @@ class SystemConsoleSession:
         self.stdin.flush()
         self._wait_for_line("SEED_SET=1")
 
+    def display_name(self, tokens: list[int]) -> None:
+        token_text = " ".join(str(token & 0xFF) for token in tokens)
+        self.stdin.write(f"mgpt_display_name {token_text}\n")
+        self.stdin.flush()
+        self._wait_for_line("DISPLAY_NAME=1")
+
     def step(self, token: int, pos: int, clear_cache: bool, poll_ms: int) -> dict[str, object]:
         self.stdin.write(f"mgpt_step {token} {pos} {1 if clear_cache else 0} {poll_ms}\n")
         self.stdin.flush()
@@ -404,6 +410,7 @@ def run_python_samples(
                 clear_cache = False
 
             output_text = "".join(decode_token(token_id, itos) for token_id in output_tokens)
+            session.display_name(output_tokens)
             sample_result = {
                 "index": sample_idx,
                 "status": 0x4,
@@ -477,6 +484,7 @@ def run_python_xorshift_samples(
                 clear_cache = False
 
             output_text = "".join(decode_token(token_id, itos) for token_id in output_tokens)
+            session.display_name(output_tokens)
             sample_result = {
                 "index": sample_idx,
                 "status": 0x4,

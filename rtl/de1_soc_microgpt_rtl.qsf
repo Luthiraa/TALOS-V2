@@ -1,7 +1,7 @@
 set_global_assignment -name FAMILY "Cyclone V"
 set_global_assignment -name DEVICE 5CSEMA5F31C6
 set_global_assignment -name TOP_LEVEL_ENTITY de1_soc_microgpt_rtl
-set_global_assignment -name NUM_PARALLEL_PROCESSORS 1
+set_global_assignment -name NUM_PARALLEL_PROCESSORS 16
 
 set_global_assignment -name SEARCH_PATH src/include
 set_global_assignment -name SYSTEMVERILOG_FILE src/de1_soc_microgpt_rtl.sv

@@ -52,6 +52,13 @@ reg host_direct_mode_50 = 1'b0;
 reg host_step_clear_50 = 1'b0;
 reg [7:0] host_step_token_50 = BOS_TOKEN;
 reg [7:0] host_step_pos_50 = 8'd0;
+reg [7:0] hex_char0_50 = BOS_TOKEN;
+reg [7:0] hex_char1_50 = BOS_TOKEN;
+reg [7:0] hex_char2_50 = BOS_TOKEN;
+reg [7:0] hex_char3_50 = BOS_TOKEN;
+reg [7:0] hex_char4_50 = BOS_TOKEN;
+reg [7:0] hex_char5_50 = BOS_TOKEN;
+reg [2:0] hex_name_len_50 = 3'd0;
 reg start_sync0 = 1'b0;
 reg start_sync1 = 1'b0;
 reg start_seen_reg = 1'b0;
@@ -147,6 +154,53 @@ always @(posedge CLOCK_50) begin
             10'h009: begin
                 if (jtag_master_writedata[0])
                     host_step_toggle_50 <= ~host_step_toggle_50;
+            end
+            10'h00A: begin
+                if (jtag_master_writedata[0]) begin
+                    hex_char0_50 <= BOS_TOKEN;
+                    hex_char1_50 <= BOS_TOKEN;
+                    hex_char2_50 <= BOS_TOKEN;
+                    hex_char3_50 <= BOS_TOKEN;
+                    hex_char4_50 <= BOS_TOKEN;
+                    hex_char5_50 <= BOS_TOKEN;
+                    hex_name_len_50 <= 3'd0;
+                end else if (jtag_master_writedata[1] && (jtag_master_writedata[15:8] != BOS_TOKEN)) begin
+                    case (hex_name_len_50)
+                        3'd0: begin
+                            hex_char5_50 <= jtag_master_writedata[15:8];
+                            hex_name_len_50 <= 3'd1;
+                        end
+                        3'd1: begin
+                            hex_char4_50 <= jtag_master_writedata[15:8];
+                            hex_name_len_50 <= 3'd2;
+                        end
+                        3'd2: begin
+                            hex_char3_50 <= jtag_master_writedata[15:8];
+                            hex_name_len_50 <= 3'd3;
+                        end
+                        3'd3: begin
+                            hex_char2_50 <= jtag_master_writedata[15:8];
+                            hex_name_len_50 <= 3'd4;
+                        end
+                        3'd4: begin
+                            hex_char1_50 <= jtag_master_writedata[15:8];
+                            hex_name_len_50 <= 3'd5;
+                        end
+                        3'd5: begin
+                            hex_char0_50 <= jtag_master_writedata[15:8];
+                            hex_name_len_50 <= 3'd6;
+                        end
+                        default: begin
+                            hex_char5_50 <= hex_char4_50;
+                            hex_char4_50 <= hex_char3_50;
+                            hex_char3_50 <= hex_char2_50;
+                            hex_char2_50 <= hex_char1_50;
+                            hex_char1_50 <= hex_char0_50;
+                            hex_char0_50 <= jtag_master_writedata[15:8];
+                            hex_name_len_50 <= 3'd6;
+                        end
+                    endcase
+                end
             end
             default: begin
             end
@@ -400,26 +454,27 @@ assign LEDR[7] = last_token_reg[0];
 assign LEDR[8] = last_token_reg[1];
 assign LEDR[9] = last_token_reg[2];
 
-assign HEX0 = hex7seg(last_token_reg[3:0]);
-assign HEX1 = hex7seg(last_token_reg[7:4]);
-assign HEX2 = hex7seg(out_len_reg[3:0]);
-assign HEX3 = hex7seg(out_len_reg[7:4]);
-assign HEX4 = hex7seg({1'b0, state_reg});
-assign HEX5 = hex7seg({2'b00, SW});
+assign HEX0 = token7seg(hex_char0_50);
+assign HEX1 = token7seg(hex_char1_50);
+assign HEX2 = token7seg(hex_char2_50);
+assign HEX3 = token7seg(hex_char3_50);
+assign HEX4 = token7seg(hex_char4_50);
+assign HEX5 = token7seg(hex_char5_50);
 
 reg [31:0] read_data_comb;
 
 always @(*) begin
     read_data_comb = 32'd0;
+    out_i = 0;
     case (jtag_word_addr)
         10'h000: read_data_comb = 32'h4D475254; // MGRT
-        10'h001: read_data_comb = 32'h00020000;
+        10'h001: read_data_comb = 32'h00020001;
         10'h002: read_data_comb = 32'd0;
         10'h003: read_data_comb = {
             pos_reg,
             out_len_reg,
             8'd0,
-            3'd0,
+            2'd0,
             direct_mode_reg,
             host_toggle_reg,
             error_reg,
@@ -447,6 +502,41 @@ always @(*) begin
         end
     endcase
 end
+
+function [6:0] token7seg;
+    input [7:0] token;
+    begin
+        case (token)
+            8'd0:  token7seg = 7'b0001000; // a
+            8'd1:  token7seg = 7'b0000011; // b
+            8'd2:  token7seg = 7'b1000110; // c
+            8'd3:  token7seg = 7'b0100001; // d
+            8'd4:  token7seg = 7'b0000110; // e
+            8'd5:  token7seg = 7'b0001110; // f
+            8'd6:  token7seg = 7'b0010000; // g
+            8'd7:  token7seg = 7'b0001011; // h
+            8'd8:  token7seg = 7'b1111001; // i
+            8'd9:  token7seg = 7'b1100001; // j
+            8'd10: token7seg = 7'b0001011; // k
+            8'd11: token7seg = 7'b1000111; // l
+            8'd12: token7seg = 7'b0101011; // m
+            8'd13: token7seg = 7'b0101011; // n
+            8'd14: token7seg = 7'b0100011; // o
+            8'd15: token7seg = 7'b0001100; // p
+            8'd16: token7seg = 7'b0011000; // q
+            8'd17: token7seg = 7'b0101111; // r
+            8'd18: token7seg = 7'b0010010; // s
+            8'd19: token7seg = 7'b0000111; // t
+            8'd20: token7seg = 7'b1100011; // u
+            8'd21: token7seg = 7'b1100011; // v
+            8'd22: token7seg = 7'b1100011; // w
+            8'd23: token7seg = 7'b0001011; // x
+            8'd24: token7seg = 7'b0010001; // y
+            8'd25: token7seg = 7'b0100100; // z
+            default: token7seg = 7'b1111111;
+        endcase
+    end
+endfunction
 
 function [6:0] hex7seg;
     input [3:0] nibble;

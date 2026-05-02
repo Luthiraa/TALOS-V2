@@ -25,21 +25,25 @@ reg [7:0] pos_reg;
 reg [6:0] row_reg;
 reg [6:0] col_reg;
 reg [3:0] idx_reg;
+reg [3:0] lm_reduce_idx;
 reg [1:0] head_reg;
 reg [4:0] time_reg;
 
 reg signed [63:0] acc_reg;
+reg signed [63:0] attn_dot_acc_reg;
 reg signed [63:0] sumsq_reg;
 reg signed [63:0] linear_acc [0:15];
 reg signed [15:0] rms_scale_reg;
 reg signed [15:0] attn_max_reg;
 reg [31:0] attn_weight_sum_reg;
+reg [31:0] attn_weight_reg;
 reg rms_start_reg;
 reg [63:0] rms_sumsq_reg;
-reg [1:0] attn_div_start_reg;
-reg signed [63:0] attn_div_num_reg [0:1];
+reg [3:0] attn_div_start_reg;
+reg signed [63:0] attn_div_num_reg [0:3];
 reg [31:0] attn_div_den_reg;
-reg signed [63:0] attn_value_acc [0:1];
+reg signed [63:0] attn_value_acc [0:3];
+reg signed [15:0] attn_value_sample [0:3];
 
 reg signed [15:0] x_vec [0:15];
 reg signed [15:0] norm_vec [0:15];
@@ -50,6 +54,7 @@ reg signed [15:0] v_vec [0:15];
 reg signed [15:0] x_attn [0:15];
 reg signed [15:0] mlp_vec [0:63];
 reg signed [15:0] logits [0:26];
+reg signed [15:0] lm_tile_logits [0:TILE_ROWS-1];
 reg signed [15:0] attn_scores [0:15];
 
 reg signed [15:0] k_cache [0:15][0:15];
@@ -82,24 +87,25 @@ reg systolic_start_reg;
 reg sampler_start_reg;
 
 reg signed [15:0] systolic_vector_value;
-reg signed [(4*16)-1:0] systolic_weights_flat;
+reg signed [(TILE_ROWS*16)-1:0] systolic_weights_flat;
 wire [4:0] systolic_col_idx;
 wire systolic_busy;
 wire systolic_done;
-wire signed [(4*64)-1:0] systolic_result_flat;
+wire signed [(TILE_ROWS*64)-1:0] systolic_result_flat;
 wire rms_busy;
 wire rms_done;
 wire signed [15:0] rms_scale_out;
-wire [1:0] attn_div_busy;
-wire [1:0] attn_div_done;
-wire signed [15:0] attn_div_quotient [0:1];
+wire [3:0] attn_div_busy;
+wire [3:0] attn_div_done;
+wire signed [15:0] attn_div_quotient [0:3];
 wire sampler_busy;
 wire sampler_done;
 wire [7:0] sampler_next_token;
 
 systolic_matvec16_tile #(
     .DATA_WIDTH(16),
-    .ACC_WIDTH(64)
+    .ACC_WIDTH(64),
+    .LANES(TILE_ROWS)
 ) linear_tile_inst (
     .clk(clk),
     .resetn(resetn),
@@ -124,7 +130,7 @@ rms_scale_engine rms_scale_inst (
 
 genvar div_idx;
 generate
-    for (div_idx = 0; div_idx < 2; div_idx = div_idx + 1) begin : GEN_ATTN_DIV
+    for (div_idx = 0; div_idx < HEAD_DIM; div_idx = div_idx + 1) begin : GEN_ATTN_DIV
         sat_div16_engine attn_div_inst (
             .clk(clk),
             .resetn(resetn),
@@ -164,43 +170,43 @@ always @(*) begin
     case (state_reg)
         ST_Q_LINEAR: begin
             systolic_vector_value = norm_vec[systolic_col_idx];
-            for (i = 0; i < 4; i = i + 1)
+            for (i = 0; i < TILE_ROWS; i = i + 1)
                 systolic_weights_flat[(i*16) +: 16] = attn_wq_rom[(row_reg + i) * EMBED_DIM + systolic_col_idx];
         end
 
         ST_K_LINEAR: begin
             systolic_vector_value = norm_vec[systolic_col_idx];
-            for (i = 0; i < 4; i = i + 1)
+            for (i = 0; i < TILE_ROWS; i = i + 1)
                 systolic_weights_flat[(i*16) +: 16] = attn_wk_rom[(row_reg + i) * EMBED_DIM + systolic_col_idx];
         end
 
         ST_V_LINEAR: begin
             systolic_vector_value = norm_vec[systolic_col_idx];
-            for (i = 0; i < 4; i = i + 1)
+            for (i = 0; i < TILE_ROWS; i = i + 1)
                 systolic_weights_flat[(i*16) +: 16] = attn_wv_rom[(row_reg + i) * EMBED_DIM + systolic_col_idx];
         end
 
         ST_ATTN_WO: begin
             systolic_vector_value = x_attn[systolic_col_idx];
-            for (i = 0; i < 4; i = i + 1)
+            for (i = 0; i < TILE_ROWS; i = i + 1)
                 systolic_weights_flat[(i*16) +: 16] = attn_wo_rom[(row_reg + i) * EMBED_DIM + systolic_col_idx];
         end
 
         ST_FC1: begin
             systolic_vector_value = norm_vec[systolic_col_idx];
-            for (i = 0; i < 4; i = i + 1)
+            for (i = 0; i < TILE_ROWS; i = i + 1)
                 systolic_weights_flat[(i*16) +: 16] = mlp_fc1_rom[((row_reg + i) * EMBED_DIM) + systolic_col_idx];
         end
 
         ST_FC2: begin
             systolic_vector_value = mlp_vec[col_reg + systolic_col_idx];
-            for (i = 0; i < 4; i = i + 1)
+            for (i = 0; i < TILE_ROWS; i = i + 1)
                 systolic_weights_flat[(i*16) +: 16] = mlp_fc2_rom[((row_reg + i) * MLP_DIM) + col_reg + systolic_col_idx];
         end
 
         ST_LM_HEAD: begin
             systolic_vector_value = x_vec[systolic_col_idx];
-            for (i = 0; i < 4; i = i + 1) begin
+            for (i = 0; i < TILE_ROWS; i = i + 1) begin
                 if ((row_reg + i) < VOCAB_SIZE)
                     systolic_weights_flat[(i*16) +: 16] = lm_head_rom[((row_reg + i) * EMBED_DIM) + systolic_col_idx];
                 else
@@ -229,17 +235,20 @@ always @(posedge clk) begin
         row_reg <= 7'd0;
         col_reg <= 7'd0;
         idx_reg <= 4'd0;
+        lm_reduce_idx <= 4'd0;
         head_reg <= 2'd0;
         time_reg <= 5'd0;
         acc_reg <= 64'sd0;
+        attn_dot_acc_reg <= 64'sd0;
         sumsq_reg <= 64'sd0;
         systolic_start_reg <= 1'b0;
         sampler_start_reg <= 1'b0;
         rms_start_reg <= 1'b0;
-        attn_div_start_reg <= 2'd0;
+        attn_div_start_reg <= 4'd0;
         rms_scale_reg <= 16'sd0;
         attn_max_reg <= 16'sd0;
         attn_weight_sum_reg <= 32'd0;
+        attn_weight_reg <= 32'd0;
         rms_sumsq_reg <= 64'd0;
         attn_div_den_reg <= 32'd0;
         busy <= 1'b0;
@@ -261,11 +270,14 @@ always @(posedge clk) begin
             mlp_vec[i] <= 16'sd0;
         for (i = 0; i < VOCAB_SIZE; i = i + 1)
             logits[i] <= 16'sd0;
+        for (i = 0; i < TILE_ROWS; i = i + 1)
+            lm_tile_logits[i] <= 16'sd0;
         for (i = 0; i < 16; i = i + 1)
             linear_acc[i] <= 64'sd0;
-        for (i = 0; i < 2; i = i + 1) begin
+        for (i = 0; i < HEAD_DIM; i = i + 1) begin
             attn_div_num_reg[i] <= 64'sd0;
             attn_value_acc[i] <= 64'sd0;
+            attn_value_sample[i] <= 16'sd0;
         end
         for (i = 0; i < 16; i = i + 1) begin
             attn_scores[i] <= 16'sd0;
@@ -279,7 +291,7 @@ always @(posedge clk) begin
         systolic_start_reg <= 1'b0;
         sampler_start_reg <= 1'b0;
         rms_start_reg <= 1'b0;
-        attn_div_start_reg <= 2'd0;
+        attn_div_start_reg <= 4'd0;
         case (state_reg)
             ST_IDLE: begin
                 busy <= 1'b0;
@@ -348,14 +360,12 @@ always @(posedge clk) begin
 
             ST_RMS0_APPLY: begin
                 value16 = mul_q12(x_vec[idx_reg], rms_scale_reg);
-                prod64 = $signed(value16) * $signed(value16);
                 x_vec[idx_reg] <= value16;
                 residual_vec[idx_reg] <= value16;
-                sumsq_reg <= sumsq_reg + (prod64 >>> FRAC_BITS);
                 if (idx_reg == EMBED_DIM - 1) begin
                     idx_reg <= 4'd0;
-                    rms_sumsq_reg <= sumsq_reg + (prod64 >>> FRAC_BITS);
-                    state_reg <= ST_ATTN_RMS_WAIT;
+                    sumsq_reg <= 64'sd0;
+                    state_reg <= ST_ATTN_RMS_SUM;
                 end else begin
                     idx_reg <= idx_reg + 4'd1;
                 end
@@ -406,13 +416,13 @@ always @(posedge clk) begin
                 if (!systolic_busy && !systolic_done)
                     systolic_start_reg <= 1'b1;
                 if (systolic_done) begin
-                    for (i = 0; i < 4; i = i + 1)
-                        q_vec[row_reg + i] <= sat16($signed(systolic_result_flat[(i*64) +: 64]) >>> FRAC_BITS);
-                    if (row_reg == 7'd12) begin
+                    for (i = 0; i < TILE_ROWS; i = i + 1)
+                        q_vec[i] <= sat16($signed(systolic_result_flat[(i*64) +: 64]) >>> FRAC_BITS);
+                    if (row_reg == LAST_EMBED_ROW_TILE) begin
                         row_reg <= 7'd0;
                         state_reg <= ST_K_LINEAR;
                     end else begin
-                        row_reg <= row_reg + 7'd4;
+                        row_reg <= row_reg + TILE_ROW_STEP;
                     end
                 end
             end
@@ -421,13 +431,13 @@ always @(posedge clk) begin
                 if (!systolic_busy && !systolic_done)
                     systolic_start_reg <= 1'b1;
                 if (systolic_done) begin
-                    for (i = 0; i < 4; i = i + 1)
-                        k_vec[row_reg + i] <= sat16($signed(systolic_result_flat[(i*64) +: 64]) >>> FRAC_BITS);
-                    if (row_reg == 7'd12) begin
+                    for (i = 0; i < TILE_ROWS; i = i + 1)
+                        k_vec[i] <= sat16($signed(systolic_result_flat[(i*64) +: 64]) >>> FRAC_BITS);
+                    if (row_reg == LAST_EMBED_ROW_TILE) begin
                         row_reg <= 7'd0;
                         state_reg <= ST_V_LINEAR;
                     end else begin
-                        row_reg <= row_reg + 7'd4;
+                        row_reg <= row_reg + TILE_ROW_STEP;
                     end
                 end
             end
@@ -436,13 +446,13 @@ always @(posedge clk) begin
                 if (!systolic_busy && !systolic_done)
                     systolic_start_reg <= 1'b1;
                 if (systolic_done) begin
-                    for (i = 0; i < 4; i = i + 1)
-                        v_vec[row_reg + i] <= sat16($signed(systolic_result_flat[(i*64) +: 64]) >>> FRAC_BITS);
-                    if (row_reg == 7'd12) begin
+                    for (i = 0; i < TILE_ROWS; i = i + 1)
+                        v_vec[i] <= sat16($signed(systolic_result_flat[(i*64) +: 64]) >>> FRAC_BITS);
+                    if (row_reg == LAST_EMBED_ROW_TILE) begin
                         row_reg <= 7'd0;
                         state_reg <= ST_CACHE_QKV;
                     end else begin
-                        row_reg <= row_reg + 7'd4;
+                        row_reg <= row_reg + TILE_ROW_STEP;
                     end
                 end
             end
@@ -465,7 +475,12 @@ always @(posedge clk) begin
                     ($signed(q_vec[head_reg * HEAD_DIM + 1]) * $signed(k_cache[time_reg][head_reg * HEAD_DIM + 1])) +
                     ($signed(q_vec[head_reg * HEAD_DIM + 2]) * $signed(k_cache[time_reg][head_reg * HEAD_DIM + 2])) +
                     ($signed(q_vec[head_reg * HEAD_DIM + 3]) * $signed(k_cache[time_reg][head_reg * HEAD_DIM + 3]));
-                value16 = sat16((acc_next >>> FRAC_BITS) >>> 1);
+                attn_dot_acc_reg <= acc_next;
+                state_reg <= ST_ATTN_DOT_COMMIT;
+            end
+
+            ST_ATTN_DOT_COMMIT: begin
+                value16 = sat16((attn_dot_acc_reg >>> FRAC_BITS) >>> 1);
                 attn_scores[time_reg] <= value16;
                 if (time_reg == 5'd0 || value16 > attn_max_reg)
                     attn_max_reg <= value16;
@@ -477,6 +492,7 @@ always @(posedge clk) begin
                     state_reg <= ST_ATTN_SUM;
                 end else begin
                     time_reg <= time_reg + 5'd1;
+                    state_reg <= ST_ATTN_DOT;
                 end
             end
 
@@ -516,7 +532,7 @@ always @(posedge clk) begin
                     col_reg <= 7'd0;
                     time_reg <= 5'd0;
                     acc_reg <= 64'sd0;
-                    for (i = 0; i < 2; i = i + 1)
+                    for (i = 0; i < HEAD_DIM; i = i + 1)
                         attn_value_acc[i] <= 64'sd0;
                     state_reg <= ST_ATTN_WEIGHT;
                 end else begin
@@ -527,52 +543,48 @@ always @(posedge clk) begin
             ST_ATTN_WEIGHT: begin
                 delta_tmp = $signed(attn_scores[time_reg]) - $signed(attn_max_reg);
                 weight_tmp = exp_neg_q12(delta_tmp);
+                attn_weight_reg <= weight_tmp;
+                for (i = 0; i < HEAD_DIM; i = i + 1)
+                    attn_value_sample[i] <= v_cache[time_reg][head_reg * HEAD_DIM + i];
+                state_reg <= ST_ATTN_WEIGHT_ACC;
+            end
+
+            ST_ATTN_WEIGHT_ACC: begin
+                for (i = 0; i < HEAD_DIM; i = i + 1) begin
+                    attn_value_acc[i] <= attn_value_acc[i] +
+                        ($signed({1'b0, attn_weight_reg[30:0]}) * $signed(attn_value_sample[i]));
+                end
                 if (time_reg == pos_reg[4:0]) begin
-                    for (i = 0; i < 2; i = i + 1) begin
-                        attn_value_acc[i] <= attn_value_acc[i] +
-                            ($signed({1'b0, weight_tmp[30:0]}) * $signed(v_cache[time_reg][head_reg * HEAD_DIM + col_reg + i]));
-                    end
                     attn_div_den_reg <= attn_weight_sum_reg;
                     acc_reg <= 64'sd0;
                     time_reg <= 5'd0;
                     state_reg <= ST_ATTN_DIV_PREP;
                 end else begin
-                    for (i = 0; i < 2; i = i + 1) begin
-                        attn_value_acc[i] <= attn_value_acc[i] +
-                            ($signed({1'b0, weight_tmp[30:0]}) * $signed(v_cache[time_reg][head_reg * HEAD_DIM + col_reg + i]));
-                    end
                     time_reg <= time_reg + 5'd1;
+                    state_reg <= ST_ATTN_WEIGHT;
                 end
             end
 
             ST_ATTN_DIV_PREP: begin
-                for (i = 0; i < 2; i = i + 1)
+                for (i = 0; i < HEAD_DIM; i = i + 1)
                     attn_div_num_reg[i] <= attn_value_acc[i];
                 state_reg <= ST_ATTN_DIV_WAIT;
             end
 
             ST_ATTN_DIV_WAIT: begin
                 if (!(|attn_div_busy) && !(|attn_div_done))
-                    attn_div_start_reg <= 2'b11;
+                    attn_div_start_reg <= 4'b1111;
                 if (&attn_div_done) begin
-                    for (i = 0; i < 2; i = i + 1)
-                        x_attn[head_reg * HEAD_DIM + col_reg + i] <= attn_div_quotient[i];
-                    if (col_reg == HEAD_DIM - 2) begin
-                        col_reg <= 7'd0;
-                        if (head_reg == N_HEAD - 1) begin
-                            row_reg <= 7'd0;
-                            state_reg <= ST_ATTN_WO;
-                        end else begin
-                            head_reg <= head_reg + 2'd1;
-                            time_reg <= 5'd0;
-                            state_reg <= ST_ATTN_DOT;
-                        end
+                    for (i = 0; i < HEAD_DIM; i = i + 1)
+                        x_attn[head_reg * HEAD_DIM + i] <= attn_div_quotient[i];
+                    col_reg <= 7'd0;
+                    if (head_reg == N_HEAD - 1) begin
+                        row_reg <= 7'd0;
+                        state_reg <= ST_ATTN_WO;
                     end else begin
-                        col_reg <= col_reg + 7'd2;
+                        head_reg <= head_reg + 2'd1;
                         time_reg <= 5'd0;
-                        for (i = 0; i < 2; i = i + 1)
-                            attn_value_acc[i] <= 64'sd0;
-                        state_reg <= ST_ATTN_WEIGHT;
+                        state_reg <= ST_ATTN_DOT;
                     end
                 end
             end
@@ -581,15 +593,15 @@ always @(posedge clk) begin
                 if (!systolic_busy && !systolic_done)
                     systolic_start_reg <= 1'b1;
                 if (systolic_done) begin
-                    for (i = 0; i < 4; i = i + 1)
-                        norm_vec[row_reg + i] <= sat16($signed(systolic_result_flat[(i*64) +: 64]) >>> FRAC_BITS);
-                    if (row_reg == 7'd12) begin
+                    for (i = 0; i < TILE_ROWS; i = i + 1)
+                        norm_vec[i] <= sat16($signed(systolic_result_flat[(i*64) +: 64]) >>> FRAC_BITS);
+                    if (row_reg == LAST_EMBED_ROW_TILE) begin
                         row_reg <= 7'd0;
                         idx_reg <= 4'd0;
                         sumsq_reg <= 64'sd0;
                         state_reg <= ST_ATTN_ADD;
                     end else begin
-                        row_reg <= row_reg + 7'd4;
+                        row_reg <= row_reg + TILE_ROW_STEP;
                     end
                 end
             end
@@ -655,18 +667,40 @@ always @(posedge clk) begin
                 if (!systolic_busy && !systolic_done)
                     systolic_start_reg <= 1'b1;
                 if (systolic_done) begin
-                    for (i = 0; i < 4; i = i + 1) begin
-                        value16 = sat16($signed(systolic_result_flat[(i*64) +: 64]) >>> FRAC_BITS);
-                        mlp_vec[row_reg + i] <= value16[15] ? 16'sd0 : value16;
-                    end
-                    if (row_reg == 7'd60) begin
+                    case (row_reg)
+                        7'd0: begin
+                            for (i = 0; i < TILE_ROWS; i = i + 1) begin
+                                value16 = sat16($signed(systolic_result_flat[(i*64) +: 64]) >>> FRAC_BITS);
+                                mlp_vec[i] <= value16[15] ? 16'sd0 : value16;
+                            end
+                        end
+                        7'd16: begin
+                            for (i = 0; i < TILE_ROWS; i = i + 1) begin
+                                value16 = sat16($signed(systolic_result_flat[(i*64) +: 64]) >>> FRAC_BITS);
+                                mlp_vec[16 + i] <= value16[15] ? 16'sd0 : value16;
+                            end
+                        end
+                        7'd32: begin
+                            for (i = 0; i < TILE_ROWS; i = i + 1) begin
+                                value16 = sat16($signed(systolic_result_flat[(i*64) +: 64]) >>> FRAC_BITS);
+                                mlp_vec[32 + i] <= value16[15] ? 16'sd0 : value16;
+                            end
+                        end
+                        default: begin
+                            for (i = 0; i < TILE_ROWS; i = i + 1) begin
+                                value16 = sat16($signed(systolic_result_flat[(i*64) +: 64]) >>> FRAC_BITS);
+                                mlp_vec[48 + i] <= value16[15] ? 16'sd0 : value16;
+                            end
+                        end
+                    endcase
+                    if (row_reg == LAST_MLP_ROW_TILE) begin
                         row_reg <= 7'd0;
                         col_reg <= 7'd0;
                         for (i = 0; i < 16; i = i + 1)
                             linear_acc[i] <= 64'sd0;
                         state_reg <= ST_FC2;
                     end else begin
-                        row_reg <= row_reg + 7'd4;
+                        row_reg <= row_reg + TILE_ROW_STEP;
                     end
                 end
             end
@@ -676,23 +710,23 @@ always @(posedge clk) begin
                     systolic_start_reg <= 1'b1;
                 if (systolic_done) begin
                     if (col_reg == 7'd48) begin
-                        for (i = 0; i < 4; i = i + 1) begin
-                            acc_next = linear_acc[row_reg + i] + $signed(systolic_result_flat[(i*64) +: 64]);
-                            norm_vec[row_reg + i] <= sat16(acc_next >>> FRAC_BITS);
-                            linear_acc[row_reg + i] <= 64'sd0;
+                        for (i = 0; i < TILE_ROWS; i = i + 1) begin
+                            acc_next = linear_acc[i] + $signed(systolic_result_flat[(i*64) +: 64]);
+                            norm_vec[i] <= sat16(acc_next >>> FRAC_BITS);
+                            linear_acc[i] <= 64'sd0;
                         end
-                        if (row_reg == 7'd12) begin
+                        if (row_reg == LAST_EMBED_ROW_TILE) begin
                             row_reg <= 7'd0;
                             col_reg <= 7'd0;
                             idx_reg <= 4'd0;
                             state_reg <= ST_MLP_ADD;
                         end else begin
-                            row_reg <= row_reg + 7'd4;
+                            row_reg <= row_reg + TILE_ROW_STEP;
                             col_reg <= 7'd0;
                         end
                     end else begin
-                        for (i = 0; i < 4; i = i + 1)
-                            linear_acc[row_reg + i] <= linear_acc[row_reg + i] + $signed(systolic_result_flat[(i*64) +: 64]);
+                        for (i = 0; i < TILE_ROWS; i = i + 1)
+                            linear_acc[i] <= linear_acc[i] + $signed(systolic_result_flat[(i*64) +: 64]);
                         col_reg <= col_reg + 7'd16;
                     end
                 end
@@ -715,31 +749,53 @@ always @(posedge clk) begin
                 if (!systolic_busy && !systolic_done)
                     systolic_start_reg <= 1'b1;
                 if (systolic_done) begin
-                    max_logit_tmp = top_logit_q12;
-                    best_token_tmp = argmax_token;
-                    for (i = 0; i < 4; i = i + 1) begin
+                    for (i = 0; i < TILE_ROWS; i = i + 1) begin
                         if ((row_reg + i) < VOCAB_SIZE) begin
                             value16 = sat16($signed(systolic_result_flat[(i*64) +: 64]) >>> FRAC_BITS);
                             logits[row_reg + i] <= value16;
-                            if (value16 > max_logit_tmp) begin
-                                max_logit_tmp = value16;
-                                best_token_tmp = row_reg + i;
-                            end
-                        end
-                    end
-                    top_logit_q12 <= max_logit_tmp;
-                    argmax_token <= best_token_tmp;
-                    if (row_reg == 7'd24) begin
-                        if (sample_mode) begin
-                            sampler_start_reg <= 1'b1;
-                            state_reg <= ST_SAMPLE_SCALE;
+                            lm_tile_logits[i] <= value16;
                         end else begin
-                            next_token <= best_token_tmp;
-                            state_reg <= ST_DONE;
+                            lm_tile_logits[i] <= 16'sh8000;
                         end
-                    end else begin
-                        row_reg <= row_reg + 7'd4;
                     end
+                    lm_reduce_idx <= 4'd0;
+                    state_reg <= ST_LM_HEAD_REDUCE;
+                end
+            end
+
+            ST_LM_HEAD_REDUCE: begin
+                max_logit_tmp = top_logit_q12;
+                best_token_tmp = argmax_token;
+                if ((row_reg + lm_reduce_idx) < VOCAB_SIZE) begin
+                    if (lm_tile_logits[lm_reduce_idx] > max_logit_tmp) begin
+                        max_logit_tmp = lm_tile_logits[lm_reduce_idx];
+                        best_token_tmp = row_reg + lm_reduce_idx;
+                    end
+                end
+
+                top_logit_q12 <= max_logit_tmp;
+                argmax_token <= best_token_tmp;
+
+                if ((lm_reduce_idx == TILE_ROWS - 1) || ((row_reg + lm_reduce_idx) == VOCAB_SIZE - 1)) begin
+                    lm_reduce_idx <= 4'd0;
+                    if (row_reg == LAST_VOCAB_ROW_TILE) begin
+                        state_reg <= ST_LM_HEAD_FINISH;
+                    end else begin
+                        row_reg <= row_reg + TILE_ROW_STEP;
+                        state_reg <= ST_LM_HEAD;
+                    end
+                end else begin
+                    lm_reduce_idx <= lm_reduce_idx + 4'd1;
+                end
+            end
+
+            ST_LM_HEAD_FINISH: begin
+                if (sample_mode) begin
+                    sampler_start_reg <= 1'b1;
+                    state_reg <= ST_SAMPLE_SCALE;
+                end else begin
+                    next_token <= argmax_token;
+                    state_reg <= ST_DONE;
                 end
             end
 

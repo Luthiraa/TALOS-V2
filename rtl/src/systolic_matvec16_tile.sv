@@ -1,25 +1,26 @@
 module systolic_matvec16_tile #(
     parameter int DATA_WIDTH = 16,
-    parameter int ACC_WIDTH  = 64
+    parameter int ACC_WIDTH  = 64,
+    parameter int LANES      = 4
 ) (
     input  logic                                      clk,
     input  logic                                      resetn,
     input  logic                                      start,
     input  logic signed [DATA_WIDTH-1:0]              vector_value,
-    input  logic signed [(4*DATA_WIDTH)-1:0]          weights_flat,
+    input  logic signed [(LANES*DATA_WIDTH)-1:0]      weights_flat,
     output logic [4:0]                                col_idx,
     output logic                                      busy,
     output logic                                      done,
-    output logic signed [(4*ACC_WIDTH)-1:0]           result_flat
+    output logic signed [(LANES*ACC_WIDTH)-1:0]       result_flat
 );
 
     localparam int COLS = 16;
 
-    logic signed [ACC_WIDTH-1:0] acc [0:3];
+    logic signed [ACC_WIDTH-1:0] acc [0:LANES-1];
 
     genvar lane;
     generate
-        for (lane = 0; lane < 4; lane = lane + 1) begin : GEN_MAC_LANE
+        for (lane = 0; lane < LANES; lane = lane + 1) begin : GEN_MAC_LANE
             wire signed [DATA_WIDTH-1:0] lane_weight;
             wire signed [DATA_WIDTH-1:0] lane_value;
             wire signed [ACC_WIDTH-1:0] lane_product;

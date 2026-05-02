@@ -5,6 +5,11 @@ localparam integer N_HEAD = 4;
 localparam integer HEAD_DIM = 4;
 localparam integer FRAC_BITS = 12;
 localparam integer SCALE = 1 << FRAC_BITS;
+localparam integer TILE_ROWS = 16;
+localparam integer LAST_EMBED_ROW_TILE = EMBED_DIM - TILE_ROWS;
+localparam integer LAST_MLP_ROW_TILE = MLP_DIM - TILE_ROWS;
+localparam integer LAST_VOCAB_ROW_TILE = ((VOCAB_SIZE - 1) / TILE_ROWS) * TILE_ROWS;
+localparam [6:0] TILE_ROW_STEP = 7'd16;
 
 localparam [5:0]
     ST_IDLE             = 6'd0,
@@ -40,4 +45,8 @@ localparam [5:0]
     ST_MLP_RMS_WAIT     = 6'd32,
     ST_ATTN_DIV_WAIT    = 6'd33,
     ST_SAMPLE_SCALE     = 6'd35,
-    ST_ATTN_DIV_PREP    = 6'd36;
+    ST_ATTN_DIV_PREP    = 6'd36,
+    ST_LM_HEAD_REDUCE   = 6'd37,
+    ST_LM_HEAD_FINISH   = 6'd38,
+    ST_ATTN_WEIGHT_ACC  = 6'd39,
+    ST_ATTN_DOT_COMMIT  = 6'd40;

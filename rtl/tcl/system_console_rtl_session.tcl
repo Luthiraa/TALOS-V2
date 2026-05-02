@@ -25,6 +25,29 @@ proc mgpt_seed {seed} {
     flush stdout
 }
 
+proc mgpt_display_clear {} {
+    mgpt_write32 $::mgpt_service_path 0x28 0x00000001
+    puts "DISPLAY_CLEAR=1"
+    flush stdout
+}
+
+proc mgpt_display_append {token} {
+    set value [expr {0x00000002 | (($token & 0xFF) << 8)}]
+    mgpt_write32 $::mgpt_service_path 0x28 $value
+    puts "DISPLAY_APPEND=1"
+    flush stdout
+}
+
+proc mgpt_display_name {args} {
+    mgpt_write32 $::mgpt_service_path 0x28 0x00000001
+    foreach token $args {
+        set value [expr {0x00000002 | ((int($token) & 0xFF) << 8)}]
+        mgpt_write32 $::mgpt_service_path 0x28 $value
+    }
+    puts "DISPLAY_NAME=1"
+    flush stdout
+}
+
 proc mgpt_step {token pos clear poll_ms} {
     set step_cfg [expr {1 | (($clear & 1) << 1) | (($pos & 0xFF) << 8) | (($token & 0xFF) << 16)}]
     mgpt_write32 $::mgpt_service_path 0x20 $step_cfg

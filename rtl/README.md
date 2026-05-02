@@ -29,10 +29,7 @@ This directory contains a standalone RTL implementation of the microgpt inferenc
 - `LEDR5`: enable switch state.
 - `LEDR6`: busy blink.
 - `LEDR7..9`: low bits of the last sampled token.
-- `HEX0..1`: last sampled token id.
-- `HEX2..3`: generated token count.
-- `HEX4`: top-level state.
-- `HEX5`: switch state.
+- `HEX0..5`: most recent generated name characters, pushed by the JTAG host.
 
 ## Build and program
 
@@ -69,23 +66,21 @@ clang -Wall -Wextra main.c -o microgpt_bos_start.exe
 
 ## Compute structure
 
-The active microgpt core now uses a streamed 4-lane systolic MAC tile for the learned projection matrices. Projection stages such as `ST_Q_LINEAR`, `ST_K_LINEAR`, `ST_V_LINEAR`, `ST_ATTN_WO`, `ST_FC1`, `ST_FC2`, and `ST_LM_HEAD` reuse `systolic_matvec16_tile.sv` to consume one input column per cycle and accumulate four output rows in parallel.
-
-The tile is intentionally 4 lanes, not 16, because the full 16-lane version simulated correctly but did not fit on the 5CSEMA5. The 4-lane streamed version preserves the model topology and fits with positive timing.
+The active microgpt core now uses a streamed 16-lane systolic MAC tile for the learned projection matrices. Projection stages such as `ST_Q_LINEAR`, `ST_K_LINEAR`, `ST_V_LINEAR`, `ST_ATTN_WO`, `ST_FC1`, `ST_FC2`, and `ST_LM_HEAD` reuse `systolic_matvec16_tile.sv` to consume one input column per cycle and accumulate a full 16-row tile in parallel while preserving the model topology.
 
 To recover throughput without changing the microGPT math order, the long normalization and attention-output divide paths were moved into exact multicycle engines: `rms_scale_engine.sv` computes the original RMS scale value iteratively, and `sat_div16_engine.sv` computes the same saturated attention divide result the prior RTL expression produced.
 
-The streamed matvec tile asserts `done` on the final useful column instead of burning an extra idle cycle. This removes one cycle from each 4-row projection tile invocation while preserving the exact accumulated result.
+The streamed matvec tile asserts `done` on the final useful column instead of burning an extra idle cycle. This removes one cycle from each projection tile invocation while preserving the exact accumulated result.
 
-The attention output divider starts at bit 31, not bit 63. This is still exact for this datapath because the numerator is bounded by `4096 * 32768 * 16 = 2^31`, but it removes 32 idle divide iterations for each attention output element. The core now runs two attention output channels for a head in parallel, with a one-cycle registered handoff into the divider numerators. This preserves the same per-channel softmax weights, weighted sums, and saturated division while halving the serial attention-value/divide passes.
+The attention output divider starts at bit 31, not bit 63. This is still exact for this datapath because the numerator is bounded by `4096 * 32768 * 16 = 2^31`, but it removes 32 idle divide iterations for each attention output element. The core now runs all four attention output channels for a head in parallel, with registered weight/value handoff into the accumulators and four parallel divider engines. This preserves the same per-channel softmax weights, weighted sums, and saturated division while removing the second serial value/divide pass per head.
 
-The LM-head argmax is folded into the existing LM-head projection tiles, so the core no longer burns a separate vocabulary scan before sampling. The RTL sampler caches the per-token categorical weights and pipelines the temperature/index/weight stages; this keeps the same sampled token sequence while removing the long combinational sampler path from timing.
+The LM-head argmax is folded into the existing LM-head projection tiles, then reduced across the 16-lane tile in a short registered state sequence. The RTL sampler caches the per-token categorical weights and pipelines the temperature/index/weight stages; this keeps the same sampled token sequence while removing long combinational sampler paths from timing.
 
-The active core clock is generated from the 50 MHz board clock with a 56.25 MHz PLL (`sys_pll_56_25.v`). The latest fitted slow-corner PLL-core Fmax is about 57.5 MHz with 0.386 ns setup slack at the 56.25 MHz target, so the current build is intentionally close to the timing limit and should not be raised further without another timing run and hardware validation.
+The active core clock is generated from the 50 MHz board clock with a 56.25 MHz PLL (`sys_pll_56_25.v`). The current fitted build uses 25,851 / 32,070 ALMs, 18,509 registers, and 38 / 87 DSP blocks. Slow 1100 mV 85 C setup slack is 1.692 ns at the 56.25 MHz target.
 
-The previous programmed build reported `..\run_inference.bat --steps 15 --temperature 0.5 --seed 2 --stream` as `output_text=kamon`, `perf_cycles=12060`, and `tokens_per_sec=23321` using the Python sampler over RTL logits. Its pure RTL sampler path (`--sampler rtl`) used a 24-bit scaled categorical cutoff over the accumulated Q12 softmax weights, instead of the earlier low-16-bit cutoff that biased strongly toward low token IDs. It reported `output_text=aariqaaaaa`, `perf_cycles=12396`, and `tokens_per_sec=45378` for the same seed/config; the 20-sample aggregate was 234 generated tokens, 285856 core cycles, and 46046 tokens/sec.
+The previous programmed 4-lane build reported `..\run_inference.bat --steps 15 --temperature 0.5 --seed 2 --sampler rtl` at 45,378 tokens/sec for the single sample and 46,046 tokens/sec over 20 samples. The current 16-lane RTL has not been hardware-JTAG sampled in this workspace yet, but the deterministic ModelSim run now clears the 50k target at the core-cycle level.
 
-In ModelSim, the RTL sampler deterministic six-step test now completes in 10,698 core cycles for the same seed/config while preserving the calibrated output tokens `10 4 11 24 13`.
+In ModelSim, the RTL sampler deterministic six-step test now completes in 5,508 core cycles while preserving the calibrated output tokens `10 4 11 24 13`. Counting the five generated tokens over all six core steps, that is about 51,060 tokens/sec at 56.25 MHz.
 
 The separate `matrixmul_unit.sv` and `processing_element.sv` files are a standalone matrix-multiply test path and are not instantiated by `de1_soc_microgpt_rtl.sv`.
 

@@ -77,6 +77,7 @@ for {set sample_idx 0} {$sample_idx < $sample_count} {incr sample_idx} {
     puts "SAMPLE_BEGIN=$sample_idx"
     flush stdout
 
+    master_write_32 $service_path 0x28 0x00000001
     master_write_32 $service_path 0x08 0x00000002
     master_write_32 $service_path 0x10 [expr {(($temp_q8_8 & 0xffff) << 16) | (($max_gen & 0xff) << 8)}]
     master_write_32 $service_path 0x14 $current_seed
@@ -117,7 +118,10 @@ for {set sample_idx 0} {$sample_idx < $sample_count} {incr sample_idx} {
 
     set outputs {}
     for {set i 0} {$i < $out_len} {incr i} {
-        lappend outputs [mgpt_read32 $service_path [expr {0x60 + ($i * 4)}]]
+        set token_word [mgpt_read32 $service_path [expr {0x60 + ($i * 4)}]]
+        lappend outputs $token_word
+        set display_token [expr {$token_word & 0xff}]
+        master_write_32 $service_path 0x28 [expr {0x00000002 | (($display_token & 0xff) << 8)}]
     }
     puts [format {OUTPUT_TOKENS[%d]=%s} $sample_idx $outputs]
     puts "SAMPLE_END=$sample_idx"
