@@ -119,6 +119,12 @@ python -m unittest test_reference_equivalence.py
 
 For hardware validation, rebuild the Quartus project, program the board, and run the JTAG inference command.
 
+## License
+
+Original TALOS-V2 source code, RTL, scripts, configuration, and documentation are licensed under the Apache License, Version 2.0. See `LICENSE` and `NOTICE`.
+
+This repository also contains third-party reference material, Intel/Altera FPGA IP or generated tool outputs, and model/dataset artifacts with separate ownership or licensing terms. See `THIRD_PARTY_NOTICES.md` before redistributing the full repository or using those artifacts outside local development and validation.
+
 ## Notes
 
 The RTL follows the microGPT transformer structure, but it uses fixed-point hardware arithmetic and an RTL-friendly sampler. Outputs are deterministic for the same seed and configuration.
