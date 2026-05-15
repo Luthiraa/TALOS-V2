@@ -7,3 +7,29 @@ otherwise noted.
 This repository contains third-party reference material, tool-generated files,
 and vendor IP with separate ownership and licensing terms. See
 THIRD_PARTY_NOTICES.md for details.
+
+----------------------------------------------------------------------
+
+PYNQ-Z2 port (`pynq/` subdirectory)
+Copyright 2026 Abdullah Al-Nafisah
+
+The `pynq/` subdirectory adds a port of TALOS-V2 to the Xilinx PYNQ-Z2
+(Zynq-7020 XC7Z020CLG400-1). It is self-contained and does not modify
+the original Intel DE1-SoC flow at the repository root. Both flows can
+coexist; users with both boards can program either from this single
+repository.
+
+Contents of `pynq/`:
+
+  - Files byte-identical to upstream `rtl/` are redistributed under
+    Apache-2.0 (copies kept in `pynq/hw/src/core/` and `pynq/hw/ip/`
+    so the Vivado build is self-contained).
+  - One file modified from upstream — `pynq/hw/src/core/include/
+    microgpt_exact_core_rom_init.svh` — paths adjusted for Vivado's
+    `INCLUDE_DIRS` mechanism. Modifications fall under Apache-2.0 §4.
+  - New original work — AXI4-Lite wrapper (`pynq/hw/src/top/`),
+    Vivado batch build (`pynq/hw/tcl/`), cocotb regression suite
+    (`pynq/hw/sim/cocotb/`), Python PYNQ driver (`pynq/sw/`),
+    notebooks, demos, tutorials, and built bitstream artefacts —
+    licensed under BSD 3-Clause; see `pynq/LICENSE.original` and the
+    per-file attribution in `pynq/UPSTREAM.md`.

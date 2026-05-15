@@ -29,3 +29,14 @@ incremental_db/
 *.sof
 *.sld
 *.jdi
+
+# PYNQ port (`pynq/` subdir) build artefacts
+pynq/hw/build/
+pynq/hw/sim/cocotb/sim_build/
+pynq/hw/sim/cocotb/dump.vcd
+pynq/hw/sim/cocotb/results.xml
+pynq/hw/sim/cocotb/cocotb_env/
+pynq/.Xil/
+pynq/NA/
+pynq/sw/notebooks/.ipynb_checkpoints/
+pynq/.venv/
